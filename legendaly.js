@@ -204,34 +204,29 @@ function glitchText(text, intensity = 0.2) {
   ).join('');
 }
 
-// モザイク風のアニメーションを表示する関数
-async function showMosaicAnimation(topOffset = 9, width = 60, height = 3, frames = 15, frameDelay = 100) {
-  const chars = ['░', '▒', '▓', '█', '▓', '▒', '░', ' '];
+// シンプルなドットアニメーションを表示する関数
+async function showDotAnimation(topOffset = 9, maxDots = 30, frameDelay = 150) {
+  const line = topOffset;
+  let dots = 0;
   
-  for (let frame = 0; frame < frames; frame++) {
-    // 各行のモザイク表示
-    for (let i = 0; i < height; i++) {
-      readline.cursorTo(process.stdout, 0, topOffset + i);
-      readline.clearLine(process.stdout, 0);
-      
-      let line = '';
-      for (let j = 0; j < width; j++) {
-        // ランダムなモザイク文字を選択
-        const charIndex = Math.floor(Math.random() * chars.length);
-        line += chars[charIndex];
-      }
-      
-      process.stdout.write(line);
+  while (dots < maxDots) {
+    readline.cursorTo(process.stdout, 0, line);
+    readline.clearLine(process.stdout, 0);
+    
+    let dotString = 'Generating wisdom';
+    for (let i = 0; i < dots % 4; i++) {
+      dotString += '.';
     }
+    
+    process.stdout.write(dotString);
+    dots++;
     
     await sleep(frameDelay);
   }
   
   // 最後にクリア
-  for (let i = 0; i < height; i++) {
-    readline.cursorTo(process.stdout, 0, topOffset + i);
-    readline.clearLine(process.stdout, 0);
-  }
+  readline.cursorTo(process.stdout, 0, line);
+  readline.clearLine(process.stdout, 0);
 }
 
 async function typeOut(lines, delay = 40, topOffset = 9) {
@@ -443,10 +438,10 @@ async function mainLoop() {
   const topOffset = 9;
   
   // 名言取得開始のメッセージを表示
-  console.log(`Fetching wisdom...`);
+  //console.log(`Fetching wisdom...`);
   
-  // モザイクアニメーションを表示しながら名言を取得
-  const animationPromise = showMosaicAnimation(topOffset);
+  // ドットアニメーションを表示しながら名言を取得
+  const animationPromise = showDotAnimation(topOffset);
   const quotesPromise = generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
   
   // 両方のプロミスを待機
