@@ -181,7 +181,7 @@ async function generateMultipleQuotes(count) {
 async function mainLoop() {
   console.clear();
   execSync(figletCmd, { stdio: 'inherit' });
-  console.log("Crafting legendary quotes with AI...\n\n");
+  console.log("Creating mystical wisdom with AI...\n\n");
 
   const topOffset = 10;
   
