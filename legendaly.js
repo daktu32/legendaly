@@ -205,6 +205,15 @@ function glitchText(text, intensity = 0.2) {
 }
 
 async function typeOut(lines, delay = 40, topOffset = 9) {
+  // linesがundefinedの場合は空の配列に設定
+  if (!lines) {
+    console.error('Warning: Tried to display undefined lines');
+    lines = [
+      '  --- Error: Unable to parse quote properly',
+      '     　　System『Legendaly』 ' + new Date().toISOString().split("T")[0]
+    ];
+  }
+
   // 表示領域をクリア
   for (let i = 0; i < lines.length + 1; i++) {
     readline.cursorTo(process.stdout, 0, topOffset + i);
@@ -231,6 +240,12 @@ async function typeOut(lines, delay = 40, topOffset = 9) {
 }
 
 async function fadeOutFullwidth(lines, topOffset = 9, steps = 6, stepDelay = 120) {
+  // linesがundefinedの場合は空の配列に設定
+  if (!lines) {
+    console.error('Warning: Tried to fade undefined lines');
+    return;
+  }
+  
   for (let step = 1; step <= steps; step++) {
     for (let i = 0; i < lines.length; i++) {
       const fadedLine = lines[i].split('').map((char) => {
@@ -274,11 +289,87 @@ async function generateBatchQuotes(count) {
     const quotes = [];
     
     for (const block of quoteBlocks) {
-      // 各ブロックをパース
-      const quoteMatch = block.match(/名言\s*:\s*(.*?)(?:\n|$)/m);
-      const userMatch = block.match(/キャラクター名\s*:\s*(.*?)(?:\n|$)/m);
-      const sourceMatch = block.match(/作品名\s*:\s*(.*?)(?:\n|$)/m);
-      const dateMatch = block.match(/西暦\s*:\s*(.*?)(?:\n|$)/m);
+      // 各言語のフォーマットに対応するための正規表現パターン
+      const patterns = {
+        // 日本語パターン
+        ja: {
+          quote: /名言\s*:\s*(.*?)(?:\n|$)/m,
+          user: /キャラクター名\s*:\s*(.*?)(?:\n|$)/m,
+          source: /作品名\s*:\s*(.*?)(?:\n|$)/m,
+          date: /西暦\s*:\s*(.*?)(?:\n|$)/m
+        },
+        // 英語パターン
+        en: {
+          quote: /Quote\s*:\s*(.*?)(?:\n|$)/mi,
+          user: /Character Name\s*:\s*(.*?)(?:\n|$)/mi,
+          source: /Work Title\s*:\s*(.*?)(?:\n|$)/mi,
+          date: /Year\s*:\s*(.*?)(?:\n|$)/mi
+        },
+        // 中国語パターン
+        zh: {
+          quote: /名言\s*:\s*(.*?)(?:\n|$)/m,
+          user: /角色名\s*:\s*(.*?)(?:\n|$)/m,
+          source: /作品名\s*:\s*(.*?)(?:\n|$)/m,
+          date: /年代\s*:\s*(.*?)(?:\n|$)/m
+        },
+        // 韓国語パターン
+        ko: {
+          quote: /명언\s*:\s*(.*?)(?:\n|$)/m,
+          user: /캐릭터 이름\s*:\s*(.*?)(?:\n|$)/m,
+          source: /작품명\s*:\s*(.*?)(?:\n|$)/m,
+          date: /연도\s*:\s*(.*?)(?:\n|$)/m
+        },
+        // フランス語パターン
+        fr: {
+          quote: /Citation\s*:\s*(.*?)(?:\n|$)/mi,
+          user: /Nom du Personnage\s*:\s*(.*?)(?:\n|$)/mi,
+          source: /Titre de l['']Œuvre\s*:\s*(.*?)(?:\n|$)/mi,
+          date: /Année\s*:\s*(.*?)(?:\n|$)/mi
+        },
+        // スペイン語パターン
+        es: {
+          quote: /Cita\s*:\s*(.*?)(?:\n|$)/mi,
+          user: /Nombre del Personaje\s*:\s*(.*?)(?:\n|$)/mi,
+          source: /Título de la Obra\s*:\s*(.*?)(?:\n|$)/mi,
+          date: /Año\s*:\s*(.*?)(?:\n|$)/mi
+        },
+        // ドイツ語パターン
+        de: {
+          quote: /Zitat\s*:\s*(.*?)(?:\n|$)/mi,
+          user: /Charaktername\s*:\s*(.*?)(?:\n|$)/mi,
+          source: /Werktitel\s*:\s*(.*?)(?:\n|$)/mi,
+          date: /Jahr\s*:\s*(.*?)(?:\n|$)/mi
+        }
+      };
+      
+      // 選択された言語のパターンを使用（見つからない場合は全パターンを試す）
+      let patternSet = patterns[language];
+      let quoteMatch = null;
+      let userMatch = null;
+      let sourceMatch = null;
+      let dateMatch = null;
+      
+      // 選択された言語のパターンで検索
+      if (patternSet) {
+        quoteMatch = block.match(patternSet.quote);
+        userMatch = block.match(patternSet.user);
+        sourceMatch = block.match(patternSet.source);
+        dateMatch = block.match(patternSet.date);
+      }
+      
+      // 見つからなかった場合は、全言語のパターンを試す
+      if (!quoteMatch) {
+        for (const lang in patterns) {
+          patternSet = patterns[lang];
+          quoteMatch = block.match(patternSet.quote);
+          if (quoteMatch) {
+            userMatch = block.match(patternSet.user);
+            sourceMatch = block.match(patternSet.source);
+            dateMatch = block.match(patternSet.date);
+            break;
+          }
+        }
+      }
 
       if (quoteMatch) {
         const quote = quoteMatch ? quoteMatch[1].trim() : '（名言取得失敗）';
