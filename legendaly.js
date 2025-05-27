@@ -416,7 +416,7 @@ async function generateBatchQuotes(count) {
         fs.appendFileSync(logPath, logLine);
 
         quotes.push([
-          `  ${quote}`,
+          `  --- ${quote}`,
           `     ${displayUser}『${source}』 ${date}`
         ]);
       }
