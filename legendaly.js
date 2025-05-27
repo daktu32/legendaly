@@ -413,7 +413,7 @@ async function mainLoop() {
   const topOffset = 9;
   
   // 名言取得開始のメッセージを表示
-  console.log(`Fetching ${Math.min(quoteCount, 25)} quotes in a single request...`);
+  //console.log(`Fetching ${Math.min(quoteCount, 25)} quotes in a single request...`);
   
   // 最初に指定した件数分の名言を一気に取得
   const allQuotes = await generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
