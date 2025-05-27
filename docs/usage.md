@@ -26,6 +26,7 @@ Legendalyは多数の環境変数を通じて動作をカスタマイズでき�
 | `MODEL` | 使用するOpenAIモデル | `gpt-4o` |
 | `QUOTE_COUNT` | 起動時に取得する名言の数 | `100` |
 | `FETCH_INTERVAL` | 名言の表示間隔（秒） | `3` |
+| `LANGUAGE` | 出力言語 | `ja` |
 
 ### 表示設定
 
@@ -47,6 +48,27 @@ Legendalyは多数の環境変数を通じて動作をカスタマイズでき�
 - `retro`: レトロな雰囲気の名言
 - `neon`: 鮮やかでネオン調の名言
 - `zen`: 禅的で哲学的な名言
+
+## 言語設定
+
+`LANGUAGE`環境変数で出力言語を変更できます：
+
+- `ja`: 日本語（デフォルト）
+- `en`: 英語
+- `zh`: 中国語
+- `ko`: 韓国語
+- `fr`: フランス語
+- `es`: スペイン語
+- `de`: ドイツ語
+
+例：
+```bash
+# 英語で名言を生成
+LANGUAGE=en node legendaly.js
+
+# フランス語でサイバーパンク調の名言
+LANGUAGE=fr TONE=cyberpunk node legendaly.js
+```
 
 ## 表示フォント
 

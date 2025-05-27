@@ -38,6 +38,8 @@ Create a `.env` file to customize behavior with the following environment variab
 - `MODEL` – OpenAI model to use (default: `gpt-4o`)
 - `QUOTE_COUNT` – Number of quotes to pre-fetch at startup (default: `100`)
 - `FETCH_INTERVAL` – Seconds between displaying each quote (default: `3`)
+- `LANGUAGE` – Output language (default: `ja`)
+  - Available languages: `ja` (Japanese), `en` (English), `zh` (Chinese), `ko` (Korean), `fr` (French), `es` (Spanish), `de` (German)
 
 ### Visual Settings
 - `FIGLET_FONT` – ASCII art font used for the header (default: `slant`)
