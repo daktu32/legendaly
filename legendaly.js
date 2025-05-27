@@ -21,7 +21,8 @@ const colorToneMap = {
   default: ''
 };
 const lolcatArgs = colorToneMap[tone] || '';
-const figletCmd = `figlet -f big "Legendaly" | lolcat ${lolcatArgs}`;
+const figletFont = process.env.FIGLET_FONT || 'slant';
+const figletCmd = `figlet -f ${figletFont} "Legendaly" | lolcat ${lolcatArgs}`;
 const logPath = path.join(__dirname, 'legendaly.log');
 const model = process.env.MODEL || "gpt-4o";
 const role = `
