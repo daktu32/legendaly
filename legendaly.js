@@ -508,8 +508,39 @@ async function generateMultipleQuotes(count) {
   return generateBatchQuotes(Math.min(count, 25)); // APIの制限を考慮して上限を設ける
 }
 
+// カーソルを非表示にする関数
+function hideCursor() {
+  process.stdout.write('\u001B[?25l');
+}
+
+// カーソルを表示する関数
+function showCursor() {
+  process.stdout.write('\u001B[?25h');
+}
+
+// プログラム終了時にカーソルを確実に表示する
+process.on('exit', () => {
+  showCursor();
+});
+
+// Ctrl+C などでの中断時にもカーソルを表示する
+process.on('SIGINT', () => {
+  showCursor();
+  process.exit();
+});
+
+// エラー発生時にもカーソルを表示する
+process.on('uncaughtException', (err) => {
+  showCursor();
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
 async function mainLoop() {
   console.clear();
+  // カーソルを非表示
+  hideCursor();
+  
   execSync(figletCmd, { stdio: 'inherit' });
   console.log("Creating mystical wisdom with AI...\n\n");
 
@@ -558,6 +589,8 @@ async function mainLoop() {
     if (typeof stopAnimation === 'function') {
       stopAnimation();
     }
+    // エラー発生時はカーソルを表示
+    showCursor();
   }
 }
 
