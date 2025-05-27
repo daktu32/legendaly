@@ -27,12 +27,18 @@ up your credentials there. A typical helper uses `dotenv` to load a `.env` file.
 node legendaly.js
 ```
 
-Set the following optional environment variables to customize behaviour:
+Create a `.env` file or set environment variables to customize behaviour:
 
 - `TONE` – Style of the generated quote (default: `epic`).
 - `TWEET_USER` – Name displayed as the author (default: `Unsung Hero`).
 - `COLOR_TONE` – Figlet colour tone (default: `cyan`).
 - `FETCH_INTERVAL` – Seconds between each new quote (default: `10`).
+
+Each generated quote is appended to `legendaly.log` in the following format:
+
+```
+[YYYY-MM-DD] 偉人名：「名言」
+```
 
 Enjoy legendary wisdom in your terminal!
 
