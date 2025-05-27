@@ -198,10 +198,40 @@ function sleep(ms) {
 }
 
 function glitchText(text, intensity = 0.2) {
-  const noiseChars = ['#', '%', '*', 'ﾐ', 'ﾅ', 'ｱ', 'ﾓ'];
+  const noiseChars = ['#', '%', '*', '+', ':', '=', '-'];
   return text.split('').map(char =>
     Math.random() < intensity ? noiseChars[Math.floor(Math.random() * noiseChars.length)] : char
   ).join('');
+}
+
+// モザイク風のアニメーションを表示する関数
+async function showMosaicAnimation(topOffset = 9, width = 60, height = 3, frames = 15, frameDelay = 100) {
+  const chars = ['░', '▒', '▓', '█', '▓', '▒', '░', ' '];
+  
+  for (let frame = 0; frame < frames; frame++) {
+    // 各行のモザイク表示
+    for (let i = 0; i < height; i++) {
+      readline.cursorTo(process.stdout, 0, topOffset + i);
+      readline.clearLine(process.stdout, 0);
+      
+      let line = '';
+      for (let j = 0; j < width; j++) {
+        // ランダムなモザイク文字を選択
+        const charIndex = Math.floor(Math.random() * chars.length);
+        line += chars[charIndex];
+      }
+      
+      process.stdout.write(line);
+    }
+    
+    await sleep(frameDelay);
+  }
+  
+  // 最後にクリア
+  for (let i = 0; i < height; i++) {
+    readline.cursorTo(process.stdout, 0, topOffset + i);
+    readline.clearLine(process.stdout, 0);
+  }
 }
 
 async function typeOut(lines, delay = 40, topOffset = 9) {
@@ -413,10 +443,14 @@ async function mainLoop() {
   const topOffset = 9;
   
   // 名言取得開始のメッセージを表示
-  //console.log(`Fetching ${Math.min(quoteCount, 25)} quotes in a single request...`);
+  console.log(`Fetching wisdom...`);
   
-  // 最初に指定した件数分の名言を一気に取得
-  const allQuotes = await generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
+  // モザイクアニメーションを表示しながら名言を取得
+  const animationPromise = showMosaicAnimation(topOffset);
+  const quotesPromise = generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
+  
+  // 両方のプロミスを待機
+  const allQuotes = await quotesPromise;
   
   // 取得完了後、画面をクリアして再度タイトルを表示
   console.clear();
