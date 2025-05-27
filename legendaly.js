@@ -410,7 +410,7 @@ async function mainLoop() {
   execSync(figletCmd, { stdio: 'inherit' });
   console.log("Creating mystical wisdom with AI...\n\n");
 
-  const topOffset = 10;
+  const topOffset = 9;
   
   // 名言取得開始のメッセージを表示
   console.log(`Fetching ${Math.min(quoteCount, 25)} quotes in a single request...`);
