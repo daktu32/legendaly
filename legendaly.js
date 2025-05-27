@@ -208,25 +208,38 @@ function glitchText(text, intensity = 0.2) {
 async function showDotAnimation(topOffset = 9, maxDots = 30, frameDelay = 150) {
   const line = topOffset;
   let dots = 0;
+  let shouldContinue = true;
   
-  while (dots < maxDots) {
-    readline.cursorTo(process.stdout, 0, line);
-    readline.clearLine(process.stdout, 0);
-    
-    let dotString = 'Generating wisdom';
-    for (let i = 0; i < dots % 4; i++) {
-      dotString += '.';
+  // アニメーション停止用の関数を返す
+  const stopAnimation = () => {
+    shouldContinue = false;
+  };
+  
+  // アニメーション実行
+  (async () => {
+    while (dots < maxDots && shouldContinue) {
+      readline.cursorTo(process.stdout, 0, line);
+      readline.clearLine(process.stdout, 0);
+      
+      let dotString = 'Generating wisdom';
+      for (let i = 0; i < dots % 4; i++) {
+        dotString += '.';
+      }
+      
+      process.stdout.write(dotString);
+      dots++;
+      
+      await sleep(frameDelay);
     }
     
-    process.stdout.write(dotString);
-    dots++;
-    
-    await sleep(frameDelay);
-  }
+    // 最後にクリア
+    if (shouldContinue) {
+      readline.cursorTo(process.stdout, 0, line);
+      readline.clearLine(process.stdout, 0);
+    }
+  })();
   
-  // 最後にクリア
-  readline.cursorTo(process.stdout, 0, line);
-  readline.clearLine(process.stdout, 0);
+  return stopAnimation;
 }
 
 async function typeOut(lines, delay = 40, topOffset = 9) {
@@ -404,8 +417,8 @@ async function generateBatchQuotes(count) {
         fs.appendFileSync(logPath, logLine);
 
         quotes.push([
-          `  --- ${quote}`,
-          `     　　${displayUser}『${source}』 ${date}`
+          `  ${quote}`,
+          `     ${displayUser}『${source}』 ${date}`
         ]);
       }
     }
@@ -437,15 +450,12 @@ async function mainLoop() {
 
   const topOffset = 9;
   
-  // 名言取得開始のメッセージを表示
-  //console.log(`Fetching wisdom...`);
-  
   // ドットアニメーションを表示しながら名言を取得
-  const animationPromise = showDotAnimation(topOffset);
-  const quotesPromise = generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
+  const stopAnimation = showDotAnimation(topOffset);
+  const allQuotes = await generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
   
-  // 両方のプロミスを待機
-  const allQuotes = await quotesPromise;
+  // アニメーションを停止
+  stopAnimation();
   
   // 取得完了後、画面をクリアして再度タイトルを表示
   console.clear();
