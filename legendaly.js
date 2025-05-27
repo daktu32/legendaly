@@ -2,8 +2,10 @@
 
 const path = require('path');
 const os = require('os');
+const fs = require('fs');
 const readline = require('readline');
 const { execSync } = require('child_process');
+require('dotenv').config();
 const openai = require(path.join(os.homedir(), '.config', 'common', 'openaiClients.js'));
 const isFullwidth = require('is-fullwidth-code-point').default;
 
@@ -11,7 +13,8 @@ const tone = process.env.TONE || 'epic';
 const user = process.env.TWEET_USER || 'Unsung Hero';
 const colorTone = process.env.COLOR_TONE || 'cyan';
 const interval = Number(process.env.FETCH_INTERVAL || 10); // seconds
-const figletCmd = `figlet -f big "Legendaly" | lolcat --freq=0.3 --speed=25`;
+const figletCmd = `figlet -f big "Legendaly" | lolcat --freq=0.3 --seed=${colorTone} --speed=25`;
+const logPath = path.join(__dirname, 'legendaly.log');
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -47,20 +50,35 @@ async function fadeOutFullwidth(lines, topOffset = 9, steps = 6, stepDelay = 120
 }
 
 async function generateQuote() {
-  const res = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      { role: "system", content: "あなたは名言を創るのが得意な偉人です。" },
-      { role: "user", content: `「${tone}」なスタイルで、短い名言を1つ述べてください。` }
-    ]
-  });
+  try {
+    const res = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "あなたは名言を創るのが得意な偉人です。" },
+        { role: "user", content: `「${tone}」なスタイルで、短い名言を1つ述べてください。` }
+      ]
+    });
 
-  const quote = res.choices[0].message.content.trim();
-  const date = new Date().toISOString().split("T")[0];
-  return [
-    `  --- ${quote}`,
-    `     　　　　　　         ${date}  ${user}`
-  ];
+    const quote = res.choices[0].message.content.trim();
+    const date = new Date().toISOString().split("T")[0];
+    const logLine = `[${date}] ${user}：「${quote}」\n`;
+    try {
+      fs.appendFileSync(logPath, logLine);
+    } catch (err) {
+      console.error('Failed to write log:', err);
+    }
+
+    return [
+      `  --- ${quote}`,
+      `     　　　　　　         ${date}  ${user}`
+    ];
+  } catch (err) {
+    console.error('OpenAI API request failed:', err);
+    return [
+      '  --- Error fetching quote',
+      `     　　　　　　         ${new Date().toISOString().split("T")[0]}  ${user}`
+    ];
+  }
 }
 
 async function mainLoop() {
