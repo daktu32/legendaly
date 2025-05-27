@@ -241,6 +241,72 @@ async function showDotAnimation(topOffset = 9, maxDots = 30, frameDelay = 150) {
   };
 }
 
+// プログレスバーアニメーションを表示する関数
+async function showProgressBar(topOffset = 9, maxFrames = 30, frameDelay = 150) {
+  const line = topOffset;
+  const barWidth = 30;  // プログレスバーの幅
+  let frame = 0;
+  let shouldContinue = true;
+  
+  // アニメーション実行
+  const animationLoop = async () => {
+    while (frame < maxFrames && shouldContinue) {
+      readline.cursorTo(process.stdout, 0, line);
+      readline.clearLine(process.stdout, 0);
+      
+      // 進行状況を計算（0-100%）
+      const progress = Math.min(100, Math.floor((frame / maxFrames) * 100));
+      
+      // プログレスバーの長さを計算
+      const completeLength = Math.floor((barWidth * progress) / 100);
+      const incompleteLength = barWidth - completeLength;
+      
+      // プログレスバーを構築
+      const bar = '[' + '='.repeat(completeLength) + ' '.repeat(incompleteLength) + ']';
+      
+      // プログレスバー文字列を組み立て
+      const progressString = `Generating wisdom ${bar} ${progress}%`;
+      
+      process.stdout.write(progressString);
+      frame++;
+      
+      await sleep(frameDelay);
+    }
+    
+    // 最後に100%を表示
+    if (shouldContinue) {
+      readline.cursorTo(process.stdout, 0, line);
+      readline.clearLine(process.stdout, 0);
+      const completedBar = '[' + '='.repeat(barWidth) + ']';
+      process.stdout.write(`Generating wisdom ${completedBar} 100%`);
+      
+      // 少し待ってからクリア
+      await sleep(frameDelay * 2);
+      readline.cursorTo(process.stdout, 0, line);
+      readline.clearLine(process.stdout, 0);
+    }
+  };
+  
+  // アニメーションを開始
+  animationLoop();
+  
+  // アニメーション停止関数を返す
+  return function() {
+    shouldContinue = false;
+    // 即座に100%を表示してクリア
+    readline.cursorTo(process.stdout, 0, line);
+    readline.clearLine(process.stdout, 0);
+    const completedBar = '[' + '='.repeat(barWidth) + ']';
+    process.stdout.write(`Generating wisdom ${completedBar} 100%`);
+    
+    // 短く待ってからクリア
+    setTimeout(() => {
+      readline.cursorTo(process.stdout, 0, line);
+      readline.clearLine(process.stdout, 0);
+    }, frameDelay);
+  };
+}
+
 async function typeOut(lines, delay = 40, topOffset = 9) {
   // linesがundefinedの場合は空の配列に設定
   if (!lines) {
@@ -449,8 +515,8 @@ async function mainLoop() {
 
   const topOffset = 9;
   
-  // ドットアニメーションを表示しながら名言を取得
-  let stopAnimation = showDotAnimation(topOffset);
+  // プログレスバーアニメーションを表示しながら名言を取得
+  let stopAnimation = showProgressBar(topOffset);
   
   try {
     const allQuotes = await generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
