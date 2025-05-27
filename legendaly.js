@@ -10,24 +10,71 @@ const openai = require(path.join(os.homedir(), '.config', 'common', 'openaiClien
 const isFullwidth = require('is-fullwidth-code-point').default;
 
 const tone = process.env.TONE || 'epic';
-const user = process.env.TWEET_USER || 'Unsung Hero';
-const colorTone = process.env.COLOR_TONE || 'cyan';
-const interval = Number(process.env.FETCH_INTERVAL || 10); // seconds
-const figletCmd = `figlet -f big "Legendaly" | lolcat --freq=0.3 --seed=${colorTone} --speed=25`;
+const interval = Number(process.env.FETCH_INTERVAL || 3);
+const colorToneMap = {
+  cyberpunk: '--freq=0.9 --spread=2.5 --seed 42',
+  mellow: '--freq=0.2 --spread=3.0',
+  retro: '--freq=0.5 --spread=2.0',
+  neon: '--freq=1.0 --spread=3.5',
+  epic: '--freq=0.8 --spread=2.0 --seed 17',
+  zen: '--freq=0.15 --spread=3.0',
+  default: ''
+};
+const lolcatArgs = colorToneMap[tone] || '';
+const figletCmd = `figlet -f big "Legendaly" | lolcat ${lolcatArgs}`;
 const logPath = path.join(__dirname, 'legendaly.log');
+const model = process.env.MODEL || "gpt-4o";
+const role = `
+あなたは創作された名言とその文脈を専門に捏造する、AI名言作家です。
+tone（雰囲気）に合った世界観・口調で、創作された名言とその背景情報を作ってください。
+出力は以下の厳格な形式に従ってください：
+
+名言 : （カギカッコなしの短い一文）
+キャラクター名 : （名言を言った架空の人物の名前）
+作品名 : （そのキャラクターが登場する架空の作品名）
+西暦 : （作品の時代設定。tone と矛盾のない時代を使うこと）
+
+注意点：
+- 実在の人物や作品は使用しないでください。
+- 「架空の」「発言者」などの説明的な語句は含めないでください。
+- 名言にはカギカッコをつけないでください。
+`;
+const userPrompt = `tone: ${tone} に合う雰囲気で、上記の出力形式に沿って名言とキャラクター情報を生成してください。`;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function glitchText(text, intensity = 0.2) {
+  const noiseChars = ['#', '%', '*', 'ﾐ', 'ﾅ', 'ｱ', 'ﾓ'];
+  return text.split('').map(char =>
+    Math.random() < intensity ? noiseChars[Math.floor(Math.random() * noiseChars.length)] : char
+  ).join('');
+}
+
 async function typeOut(lines, delay = 40, topOffset = 9) {
+  // 表示領域をクリア
+  for (let i = 0; i < lines.length + 1; i++) {
+    readline.cursorTo(process.stdout, 0, topOffset + i);
+    readline.clearLine(process.stdout, 0);
+  }
+
   for (let i = 0; i < lines.length; i++) {
     readline.cursorTo(process.stdout, 0, topOffset + i);
-    for (const char of lines[i]) {
+    const line = lines[i];
+
+    if (tone === 'cyberpunk') {
+      for (let f = 0; f < 3; f++) {
+        readline.cursorTo(process.stdout, 0, topOffset + i);
+        process.stdout.write(glitchText(line));
+        await sleep(80);
+      }
+    }
+
+    for (const char of line) {
       process.stdout.write(char);
       await sleep(delay);
     }
-    process.stdout.write('\n');
   }
 }
 
@@ -41,42 +88,55 @@ async function fadeOutFullwidth(lines, topOffset = 9, steps = 6, stepDelay = 120
         const replacement = fade ? (isWide ? '　' : ' ') : char;
         return { text: replacement, width: isWide ? 2 : 1 };
       });
-
       readline.cursorTo(process.stdout, 0, topOffset + i);
+      readline.clearLine(process.stdout, 0);
       process.stdout.write(fadedLine.map(seg => seg.text).join(''));
     }
     await sleep(stepDelay);
+  }
+  
+  // 最後に完全に消去するための処理を追加
+  for (let i = 0; i < lines.length + 1; i++) {
+    readline.cursorTo(process.stdout, 0, topOffset + i);
+    readline.clearLine(process.stdout, 0);
   }
 }
 
 async function generateQuote() {
   try {
     const res = await openai.chat.completions.create({
-      model: "gpt-4",
+      model,
       messages: [
-        { role: "system", content: "あなたは名言を創るのが得意な偉人です。" },
-        { role: "user", content: `「${tone}」なスタイルで、短い名言を1つ述べてください。` }
+        { role: "system", content: role },
+        { role: "user", content: userPrompt }
       ]
     });
 
-    const quote = res.choices[0].message.content.trim();
-    const date = new Date().toISOString().split("T")[0];
-    const logLine = `[${date}] ${user}：「${quote}」\n`;
-    try {
-      fs.appendFileSync(logPath, logLine);
-    } catch (err) {
-      console.error('Failed to write log:', err);
-    }
+    const output = res.choices[0].message.content.trim();
+
+    // フォーマットに基づきパース
+    const quoteMatch = output.match(/^名言\s*:\s*(.*)/m);
+    const userMatch = output.match(/^キャラクター名\s*:\s*(.*)/m);
+    const sourceMatch = output.match(/^作品名\s*:\s*(.*)/m);
+    const dateMatch = output.match(/^西暦\s*:\s*(.*)/m);
+
+    const quote = quoteMatch ? quoteMatch[1] : '（名言取得失敗）';
+    const displayUser = userMatch ? userMatch[1] : 'Unknown';
+    const source = sourceMatch ? sourceMatch[1] : 'Unknown';
+    const date = dateMatch ? dateMatch[1] : new Date().toISOString().split("T")[0];
+
+    const logLine = `[${date}] ${displayUser}『${source}』：「${quote}」\n`;
+    fs.appendFileSync(logPath, logLine);
 
     return [
       `  --- ${quote}`,
-      `     　　　　　　         ${date}  ${user}`
+      `     　　${displayUser}『${source}』 ${date}`
     ];
   } catch (err) {
     console.error('OpenAI API request failed:', err);
     return [
       '  --- Error fetching quote',
-      `     　　　　　　         ${new Date().toISOString().split("T")[0]}  ${user}`
+      `     　　Unknown『Unknown』 ${new Date().toISOString().split("T")[0]}`
     ];
   }
 }
@@ -84,11 +144,17 @@ async function generateQuote() {
 async function mainLoop() {
   console.clear();
   execSync(figletCmd, { stdio: 'inherit' });
-  console.log("Crafting legendary quotes with AI...\n");
+  console.log("Crafting legendary quotes with AI...\n\n");
 
-  const topOffset = 9;
+  const topOffset = 10;
 
   while (true) {
+    // 表示エリアをクリア
+    for (let i = 0; i < 5; i++) {
+      readline.cursorTo(process.stdout, 0, topOffset + i);
+      readline.clearLine(process.stdout, 0);
+    }
+    
     const lines = await generateQuote();
     await typeOut(lines, 40, topOffset);
     await sleep(2000);
