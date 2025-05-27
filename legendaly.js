@@ -299,7 +299,7 @@ async function showProgressBar(topOffset = 9, maxFrames = 30, frameDelay = 150) 
     const completedBar = '[' + '='.repeat(barWidth) + ']';
     process.stdout.write(`Generating wisdom ${completedBar} 100%`);
     
-    // 短く待ってからクリア
+    // 短く待ってからバー部分のみクリア
     setTimeout(() => {
       readline.cursorTo(process.stdout, 0, line);
       readline.clearLine(process.stdout, 0);
@@ -526,10 +526,11 @@ async function mainLoop() {
       stopAnimation();
     }
     
-    // 取得完了後、画面をクリアして再度タイトルを表示
-    console.clear();
-    execSync(figletCmd, { stdio: 'inherit' });
-    console.log("Creating mystical wisdom with AI...\n\n");
+    // プログレスバー部分のみクリア
+    for (let i = 0; i < 5; i++) {
+      readline.cursorTo(process.stdout, 0, topOffset + i);
+      readline.clearLine(process.stdout, 0);
+    }
     
     // 取得した名言をループして表示
     let quoteIndex = 0;
