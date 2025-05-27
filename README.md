@@ -36,6 +36,15 @@ Set the following optional environment variables to customize behaviour:
 
 Enjoy legendary wisdom in your terminal!
 
+## Global CLI
+
+Install the package globally to use the `legendaly` command anywhere:
+
+```bash
+npm link
+legendaly
+```
+
 ## License
 
 MIT License
