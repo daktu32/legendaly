@@ -241,12 +241,44 @@ async function showDotAnimation(topOffset = 9, maxDots = 30, frameDelay = 150) {
   };
 }
 
+// カーソルを非表示にする関数
+function hideCursor() {
+  process.stdout.write('\u001B[?25l');
+}
+
+// カーソルを表示する関数
+function showCursor() {
+  process.stdout.write('\u001B[?25h');
+}
+
+// プログラム終了時にカーソルを確実に表示する
+process.on('exit', () => {
+  showCursor();
+});
+
+// Ctrl+C などでの中断時にもカーソルを表示する
+process.on('SIGINT', () => {
+  showCursor();
+  console.log('\nプログラムを終了します');
+  process.exit(0);
+});
+
+// エラー発生時にもカーソルを表示する
+process.on('uncaughtException', (err) => {
+  showCursor();
+  console.error('エラーが発生しました:', err);
+  process.exit(1);
+});
+
 // プログレスバーアニメーションを表示する関数
 async function showProgressBar(topOffset = 9, maxFrames = 30, frameDelay = 150) {
   const line = topOffset;
   const barWidth = 30;  // プログレスバーの幅
   let frame = 0;
   let shouldContinue = true;
+  
+  // カーソルを非表示に
+  hideCursor();
   
   // アニメーション実行
   const animationLoop = async () => {
@@ -317,6 +349,9 @@ async function typeOut(lines, delay = 40, topOffset = 9) {
     ];
   }
 
+  // カーソルを非表示に
+  hideCursor();
+  
   // 表示領域をクリア
   for (let i = 0; i < lines.length + 1; i++) {
     readline.cursorTo(process.stdout, 0, topOffset + i);
@@ -348,6 +383,9 @@ async function fadeOutFullwidth(lines, topOffset = 9, steps = 6, stepDelay = 120
     console.error('Warning: Tried to fade undefined lines');
     return;
   }
+  
+  // カーソルを非表示に
+  hideCursor();
   
   for (let step = 1; step <= steps; step++) {
     for (let i = 0; i < lines.length; i++) {
@@ -508,34 +546,6 @@ async function generateMultipleQuotes(count) {
   return generateBatchQuotes(Math.min(count, 25)); // APIの制限を考慮して上限を設ける
 }
 
-// カーソルを非表示にする関数
-function hideCursor() {
-  process.stdout.write('\u001B[?25l');
-}
-
-// カーソルを表示する関数
-function showCursor() {
-  process.stdout.write('\u001B[?25h');
-}
-
-// プログラム終了時にカーソルを確実に表示する
-process.on('exit', () => {
-  showCursor();
-});
-
-// Ctrl+C などでの中断時にもカーソルを表示する
-process.on('SIGINT', () => {
-  showCursor();
-  process.exit();
-});
-
-// エラー発生時にもカーソルを表示する
-process.on('uncaughtException', (err) => {
-  showCursor();
-  console.error('Uncaught Exception:', err);
-  process.exit(1);
-});
-
 async function mainLoop() {
   console.clear();
   // カーソルを非表示
@@ -543,6 +553,9 @@ async function mainLoop() {
   
   execSync(figletCmd, { stdio: 'inherit' });
   console.log("Creating mystical wisdom with AI...\n\n");
+  
+  // 再度カーソルを非表示（フィグレット表示後に再設定）
+  hideCursor();
 
   const topOffset = 9;
   
@@ -572,6 +585,9 @@ async function mainLoop() {
         readline.cursorTo(process.stdout, 0, topOffset + i);
         readline.clearLine(process.stdout, 0);
       }
+      
+      // カーソルを非表示（各ループの開始時に再設定）
+      hideCursor();
       
       const currentQuote = allQuotes[quoteIndex];
       await typeOut(currentQuote, typeSpeed, topOffset);
