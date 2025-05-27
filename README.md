@@ -21,18 +21,22 @@ You also need an OpenAI API key. The script expects a helper at
 Create this file (or modify `legendaly.js` to point to your own helper) and set
 up your credentials there. A typical helper uses `dotenv` to load a `.env` file.
 
+User configurable options are centralised in `config.js`. Environment
+variables defined there can be overridden in a `.env` file or via the shell.
+
 ## Usage
 
 ```bash
 node legendaly.js
 ```
 
-Create a `.env` file or set environment variables to customize behaviour:
+Create a `.env` file or edit `config.js` to customise behaviour.
+The following environment variables are recognised:
 
 - `TONE` – Style of the generated quote (default: `epic`).
-- `TWEET_USER` – Name displayed as the author (default: `Unsung Hero`).
-- `COLOR_TONE` – Figlet colour tone (default: `cyan`).
-- `FETCH_INTERVAL` – Seconds between each new quote (default: `10`).
+- `FIGLET_FONT` – Font used for the header (default: `slant`).
+- `FETCH_INTERVAL` – Seconds between each new quote (default: `3`).
+- `MODEL` – OpenAI model to use (default: `gpt-4o`).
 
 Each generated quote is appended to `legendaly.log` in the following format:
 
