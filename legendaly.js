@@ -271,8 +271,6 @@ async function fadeOutFullwidth(lines, topOffset = 9, steps = 6, stepDelay = 120
 
 // 1回のAPI呼び出しで複数の名言をまとめて生成
 async function generateBatchQuotes(count) {
-  console.log(`Fetching ${count} quotes in a single request...`);
-  
   try {
     const res = await openai.chat.completions.create({
       model,
@@ -387,7 +385,6 @@ async function generateBatchQuotes(count) {
       }
     }
     
-    console.log(`\nFetched ${quotes.length} quotes successfully!`);
     return quotes;
     
   } catch (err) {
@@ -415,8 +412,16 @@ async function mainLoop() {
 
   const topOffset = 10;
   
+  // 名言取得開始のメッセージを表示
+  console.log(`Fetching ${Math.min(quoteCount, 25)} quotes in a single request...`);
+  
   // 最初に指定した件数分の名言を一気に取得
   const allQuotes = await generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
+  
+  // 取得完了後、画面をクリアして再度タイトルを表示
+  console.clear();
+  execSync(figletCmd, { stdio: 'inherit' });
+  console.log("Creating mystical wisdom with AI...\n\n");
   
   // 取得した名言をループして表示
   let quoteIndex = 0;
