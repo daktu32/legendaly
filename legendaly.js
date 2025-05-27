@@ -12,6 +12,10 @@ const isFullwidth = require('is-fullwidth-code-point').default;
 const tone = process.env.TONE || 'epic';
 const interval = Number(process.env.FETCH_INTERVAL || 3);
 const quoteCount = Number(process.env.QUOTE_COUNT || 100); // 取得する名言の数
+const typeSpeed = Number(process.env.TYPE_SPEED || 40); // 文字表示の速度（ミリ秒）
+const fadeSteps = Number(process.env.FADE_STEPS || 8); // フェードアウトのステップ数
+const fadeDelay = Number(process.env.FADE_DELAY || 100); // フェードアウトの遅延時間（ミリ秒）
+const displayTime = Number(process.env.DISPLAY_TIME || 2000); // 表示時間（ミリ秒）
 const colorToneMap = {
   cyberpunk: '--freq=0.9 --spread=2.5 --seed 42',
   mellow: '--freq=0.2 --spread=3.0',
@@ -195,9 +199,9 @@ async function mainLoop() {
     }
     
     const currentQuote = allQuotes[quoteIndex];
-    await typeOut(currentQuote, 40, topOffset);
-    await sleep(2000);
-    await fadeOutFullwidth(currentQuote, topOffset, 8, 100);
+    await typeOut(currentQuote, typeSpeed, topOffset);
+    await sleep(displayTime);
+    await fadeOutFullwidth(currentQuote, topOffset, fadeSteps, fadeDelay);
     
     // 次の名言へ
     quoteIndex = (quoteIndex + 1) % allQuotes.length;
