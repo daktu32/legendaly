@@ -210,13 +210,8 @@ async function showDotAnimation(topOffset = 9, maxDots = 30, frameDelay = 150) {
   let dots = 0;
   let shouldContinue = true;
   
-  // アニメーション停止用の関数を返す
-  const stopAnimation = () => {
-    shouldContinue = false;
-  };
-  
   // アニメーション実行
-  (async () => {
+  const animationLoop = async () => {
     while (dots < maxDots && shouldContinue) {
       readline.cursorTo(process.stdout, 0, line);
       readline.clearLine(process.stdout, 0);
@@ -233,13 +228,17 @@ async function showDotAnimation(topOffset = 9, maxDots = 30, frameDelay = 150) {
     }
     
     // 最後にクリア
-    if (shouldContinue) {
-      readline.cursorTo(process.stdout, 0, line);
-      readline.clearLine(process.stdout, 0);
-    }
-  })();
+    readline.cursorTo(process.stdout, 0, line);
+    readline.clearLine(process.stdout, 0);
+  };
   
-  return stopAnimation;
+  // アニメーションを開始
+  animationLoop();
+  
+  // アニメーション停止関数を返す
+  return function() {
+    shouldContinue = false;
+  };
 }
 
 async function typeOut(lines, delay = 40, topOffset = 9) {
@@ -451,36 +450,47 @@ async function mainLoop() {
   const topOffset = 9;
   
   // ドットアニメーションを表示しながら名言を取得
-  const stopAnimation = showDotAnimation(topOffset);
-  const allQuotes = await generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
+  let stopAnimation = showDotAnimation(topOffset);
   
-  // アニメーションを停止
-  stopAnimation();
-  
-  // 取得完了後、画面をクリアして再度タイトルを表示
-  console.clear();
-  execSync(figletCmd, { stdio: 'inherit' });
-  console.log("Creating mystical wisdom with AI...\n\n");
-  
-  // 取得した名言をループして表示
-  let quoteIndex = 0;
-  
-  while (true) {
-    // 表示エリアをクリア
-    for (let i = 0; i < 5; i++) {
-      readline.cursorTo(process.stdout, 0, topOffset + i);
-      readline.clearLine(process.stdout, 0);
+  try {
+    const allQuotes = await generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
+    
+    // アニメーションを停止
+    if (typeof stopAnimation === 'function') {
+      stopAnimation();
     }
     
-    const currentQuote = allQuotes[quoteIndex];
-    await typeOut(currentQuote, typeSpeed, topOffset);
-    await sleep(displayTime);
-    await fadeOutFullwidth(currentQuote, topOffset, fadeSteps, fadeDelay);
+    // 取得完了後、画面をクリアして再度タイトルを表示
+    console.clear();
+    execSync(figletCmd, { stdio: 'inherit' });
+    console.log("Creating mystical wisdom with AI...\n\n");
     
-    // 次の名言へ
-    quoteIndex = (quoteIndex + 1) % allQuotes.length;
+    // 取得した名言をループして表示
+    let quoteIndex = 0;
     
-    await sleep(interval * 1000);
+    while (true) {
+      // 表示エリアをクリア
+      for (let i = 0; i < 5; i++) {
+        readline.cursorTo(process.stdout, 0, topOffset + i);
+        readline.clearLine(process.stdout, 0);
+      }
+      
+      const currentQuote = allQuotes[quoteIndex];
+      await typeOut(currentQuote, typeSpeed, topOffset);
+      await sleep(displayTime);
+      await fadeOutFullwidth(currentQuote, topOffset, fadeSteps, fadeDelay);
+      
+      // 次の名言へ
+      quoteIndex = (quoteIndex + 1) % allQuotes.length;
+      
+      await sleep(interval * 1000);
+    }
+  } catch (error) {
+    console.error('エラーが発生しました:', error);
+    // エラー発生時もアニメーションを停止
+    if (typeof stopAnimation === 'function') {
+      stopAnimation();
+    }
   }
 }
 
