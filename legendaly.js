@@ -5,26 +5,15 @@ const os = require('os');
 const fs = require('fs');
 const readline = require('readline');
 const { execSync } = require('child_process');
-require('dotenv').config();
 const openai = require(path.join(os.homedir(), '.config', 'common', 'openaiClients.js'));
 const isFullwidth = require('is-fullwidth-code-point').default;
 
-const tone = process.env.TONE || 'epic';
-const interval = Number(process.env.FETCH_INTERVAL || 3);
-const colorToneMap = {
-  cyberpunk: '--freq=0.9 --spread=2.5 --seed 42',
-  mellow: '--freq=0.2 --spread=3.0',
-  retro: '--freq=0.5 --spread=2.0',
-  neon: '--freq=1.0 --spread=3.5',
-  epic: '--freq=0.8 --spread=2.0 --seed 17',
-  zen: '--freq=0.15 --spread=3.0',
-  default: ''
-};
+// Load user configuration
+const { tone, fetchInterval, figletFont, model, colorToneMap } = require('./config');
+
 const lolcatArgs = colorToneMap[tone] || '';
-const figletFont = process.env.FIGLET_FONT || 'slant';
 const figletCmd = `figlet -f ${figletFont} "Legendaly" | lolcat ${lolcatArgs}`;
 const logPath = path.join(__dirname, 'legendaly.log');
-const model = process.env.MODEL || "gpt-4o";
 const role = `
 あなたは創作された名言とその文脈を専門に捏造する、AI名言作家です。
 tone（雰囲気）に合った世界観・口調で、創作された名言とその背景情報を作ってください。
@@ -160,7 +149,7 @@ async function mainLoop() {
     await typeOut(lines, 40, topOffset);
     await sleep(2000);
     await fadeOutFullwidth(lines, topOffset, 8, 100);
-    await sleep(interval * 1000);
+    await sleep(fetchInterval * 1000);
   }
 }
 
