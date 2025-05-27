@@ -28,20 +28,27 @@ const logPath = path.join(__dirname, 'legendaly.log');
 const model = process.env.MODEL || "gpt-4o";
 const role = `
 あなたは創作された名言とその文脈を専門に捏造する、AI名言作家です。
-tone（雰囲気）に合った世界観・口調で、創作された名言とその背景情報を作ってください。
-出力は以下の厳格な形式に従ってください：
+tone（雰囲気）に合った世界観・口調で、創作された複数の名言とその背景情報を作ってください。
+各名言は以下の厳格な形式に従ってください：
 
 名言 : （カギカッコなしの短い一文）
 キャラクター名 : （名言を言った架空の人物の名前）
 作品名 : （そのキャラクターが登場する架空の作品名）
 西暦 : （作品の時代設定。tone と矛盾のない時代を使うこと）
+---
 
 注意点：
 - 実在の人物や作品は使用しないでください。
 - 「架空の」「発言者」などの説明的な語句は含めないでください。
 - 名言にはカギカッコをつけないでください。
+- 各名言の最後に必ず "---" を入れて区切ってください。
 `;
-const userPrompt = `tone: ${tone} に合う雰囲気で、上記の出力形式に沿って名言とキャラクター情報を生成してください。`;
+
+// 複数の名言を一度に生成するプロンプト
+function createBatchPrompt(count) {
+  return `tone: ${tone} に合う雰囲気で、上記の出力形式に沿って ${count} 個の名言とキャラクター情報を生成してください。
+各名言の最後に必ず "---" を入れて区切ってください。`;
+}
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -104,63 +111,67 @@ async function fadeOutFullwidth(lines, topOffset = 9, steps = 6, stepDelay = 120
   }
 }
 
-async function generateQuote() {
+// 1回のAPI呼び出しで複数の名言をまとめて生成
+async function generateBatchQuotes(count) {
+  console.log(`Fetching ${count} quotes in a single request...`);
+  
   try {
     const res = await openai.chat.completions.create({
       model,
       messages: [
         { role: "system", content: role },
-        { role: "user", content: userPrompt }
+        { role: "user", content: createBatchPrompt(count) }
       ]
     });
 
     const output = res.choices[0].message.content.trim();
+    
+    // 出力を "---" で分割して複数の名言に分ける
+    const quoteBlocks = output.split(/\s*---\s*/).filter(block => block.trim() !== '');
+    const quotes = [];
+    
+    for (const block of quoteBlocks) {
+      // 各ブロックをパース
+      const quoteMatch = block.match(/名言\s*:\s*(.*?)(?:\n|$)/m);
+      const userMatch = block.match(/キャラクター名\s*:\s*(.*?)(?:\n|$)/m);
+      const sourceMatch = block.match(/作品名\s*:\s*(.*?)(?:\n|$)/m);
+      const dateMatch = block.match(/西暦\s*:\s*(.*?)(?:\n|$)/m);
 
-    // フォーマットに基づきパース
-    const quoteMatch = output.match(/^名言\s*:\s*(.*)/m);
-    const userMatch = output.match(/^キャラクター名\s*:\s*(.*)/m);
-    const sourceMatch = output.match(/^作品名\s*:\s*(.*)/m);
-    const dateMatch = output.match(/^西暦\s*:\s*(.*)/m);
+      if (quoteMatch) {
+        const quote = quoteMatch ? quoteMatch[1].trim() : '（名言取得失敗）';
+        const displayUser = userMatch ? userMatch[1].trim() : 'Unknown';
+        const source = sourceMatch ? sourceMatch[1].trim() : 'Unknown';
+        const date = dateMatch ? dateMatch[1].trim() : new Date().toISOString().split("T")[0];
 
-    const quote = quoteMatch ? quoteMatch[1] : '（名言取得失敗）';
-    const displayUser = userMatch ? userMatch[1] : 'Unknown';
-    const source = sourceMatch ? sourceMatch[1] : 'Unknown';
-    const date = dateMatch ? dateMatch[1] : new Date().toISOString().split("T")[0];
+        const logLine = `[${date}] ${displayUser}『${source}』：「${quote}」\n`;
+        fs.appendFileSync(logPath, logLine);
 
-    const logLine = `[${date}] ${displayUser}『${source}』：「${quote}」\n`;
-    fs.appendFileSync(logPath, logLine);
-
-    return [
-      `  --- ${quote}`,
-      `     　　${displayUser}『${source}』 ${date}`
-    ];
+        quotes.push([
+          `  --- ${quote}`,
+          `     　　${displayUser}『${source}』 ${date}`
+        ]);
+      }
+    }
+    
+    console.log(`\nFetched ${quotes.length} quotes successfully!`);
+    return quotes;
+    
   } catch (err) {
     console.error('OpenAI API request failed:', err);
+    // エラー時は少なくとも1つのダミー名言を返す
     return [
-      '  --- Error fetching quote',
-      `     　　Unknown『Unknown』 ${new Date().toISOString().split("T")[0]}`
+      [
+        '  --- Error fetching quotes',
+        `     　　Unknown『Unknown』 ${new Date().toISOString().split("T")[0]}`
+      ]
     ];
   }
 }
 
-// 複数の名言を一度に生成する関数
+// 複数の名言を一度に生成する関数（互換性のため残す）
 async function generateMultipleQuotes(count) {
-  console.log(`Fetching ${count} quotes...`);
-  const quotes = [];
-  
-  for (let i = 0; i < count; i++) {
-    try {
-      process.stdout.write(`.`); // 進捗表示
-      const quote = await generateQuote();
-      quotes.push(quote);
-    } catch (error) {
-      console.error(`Error generating quote ${i+1}:`, error);
-      // エラーが発生しても続行
-    }
-  }
-  
-  console.log(`\nFetched ${quotes.length} quotes successfully!`);
-  return quotes;
+  // バッチ処理で一度に取得
+  return generateBatchQuotes(Math.min(count, 25)); // APIの制限を考慮して上限を設ける
 }
 
 async function mainLoop() {
@@ -171,7 +182,7 @@ async function mainLoop() {
   const topOffset = 10;
   
   // 最初に指定した件数分の名言を一気に取得
-  const allQuotes = await generateMultipleQuotes(quoteCount);
+  const allQuotes = await generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
   
   // 取得した名言をループして表示
   let quoteIndex = 0;
