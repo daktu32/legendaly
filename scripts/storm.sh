@@ -13,7 +13,7 @@ while true; do
   effect=${effects[RANDOM % ${#effects[@]} + 1]}
 
   # 名言を取得・シャッフル → 縦横センタリング → tte に渡す
-  sh "${0:A:h}"/quotes.sh | shuf | tte "$effect"
+  sh "${0:A:h}"/quotes.sh | shuf | column -s '|' -t | tte "$effect"
 
   sleep 5
 done
