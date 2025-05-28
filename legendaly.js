@@ -5,9 +5,6 @@ const fs = require('fs');
 const readline = require('readline');
 const { execSync } = require('child_process');
 require('dotenv').config();
-const openaiClientPath = process.env.OPENAI_CLIENT_PATH ||
-  path.join(os.homedir(), '.config', 'common', 'openaiClients.js');
-const openai = require(openaiClientPath);
 const {
   sleep,
   hideCursor,
@@ -87,9 +84,6 @@ const allPatterns = Object.fromEntries(
 function createBatchPrompt(count) {
   locale = getLocale(language);
   return locale.createBatchPrompt(tone, count);
-}
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // シンプルなドットアニメーションを表示する関数
