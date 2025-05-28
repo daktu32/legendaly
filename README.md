@@ -1,5 +1,7 @@
 # Legendaly 🧙‍♂️
 
+![Legendaly](assets/banner.png)
+
 **Legendaly** is a terminal-based legendary quote generator powered by OpenAI GPT-4.
 It types out beautiful quotes like a sage, then fades them into mist, one by one.
 
