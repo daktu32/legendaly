@@ -1,25 +1,28 @@
 #!/usr/bin/env node
 
 const path = require('path');
-const os = require('os');
 const fs = require('fs');
 const readline = require('readline');
 const { execSync } = require('child_process');
-require('dotenv').config();
-const openaiClientPath = process.env.OPENAI_CLIENT_PATH ||
-  path.join(os.homedir(), '.config', 'common', 'openaiClients.js');
-const openai = require(openaiClientPath);
+const config = require('./config');
+const openai = require(config.openaiClientPath);
 const isFullwidth = require('is-fullwidth-code-point').default;
 
-// 環境変数を取得
-const tone = process.env.TONE || 'epic';
-const language = process.env.LANGUAGE || 'ja'; // 出力言語（デフォルトは日本語）
-const interval = Number(process.env.FETCH_INTERVAL || 3);
-const quoteCount = Number(process.env.QUOTE_COUNT || 100); // 取得する名言の数
-const typeSpeed = Number(process.env.TYPE_SPEED || 40); // 文字表示の速度（ミリ秒）
-const fadeSteps = Number(process.env.FADE_STEPS || 8); // フェードアウトのステップ数
-const fadeDelay = Number(process.env.FADE_DELAY || 100); // フェードアウトの遅延時間（ミリ秒）
-const displayTime = Number(process.env.DISPLAY_TIME || 2000); // 表示時間（ミリ秒）
+// 設定の取得
+const {
+  tone,
+  language,
+  fetchInterval,
+  quoteCount,
+  typeSpeed,
+  fadeSteps,
+  fadeDelay,
+  displayTime,
+  figletFont,
+  model,
+  colorToneMap
+} = config;
+const interval = fetchInterval;
 
 // echoesディレクトリが存在しない場合は作成
 const echoesDir = path.join(__dirname, 'echoes');
@@ -49,19 +52,8 @@ function formatDateAsCompactString(date) {
 // レガシーログパスも残しておく（後方互換性のため）
 const logPath = path.join(__dirname, 'legendaly.log');
 
-const colorToneMap = {
-  cyberpunk: '--freq=0.9 --spread=2.0',
-  mellow: '--freq=0.2 --spread=3.0',
-  retro: '--freq=0.5 --spread=2.0',
-  neon: '--freq=1.0 --spread=3.5',
-  epic: '--freq=0.8 --spread=2.0 --seed 17',
-  zen: '--freq=0.15 --spread=3.0',
-  default: ''
-};
 const lolcatArgs = colorToneMap[tone] || '';
-const figletFont = process.env.FIGLET_FONT || 'slant';
 const figletCmd = `figlet -f ${figletFont} "Legendaly" | lolcat ${lolcatArgs} --force`;
-const model = process.env.MODEL || "gpt-4o";
 
 // 言語に応じたシステムロールを生成する関数
 function createSystemRole() {
