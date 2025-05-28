@@ -67,7 +67,7 @@ Create a `.env` file to customize behavior with the following environment variab
 LANGUAGE=en TONE=zen node legendaly.js
 ```
 
-![Legendaly](assets/demo_en_zen.png)
+![Demo_English_Zen](assets/demo_en_zen.gif)
 
 ```bash
 # Use cyberpunk theme with futuristic fonts
