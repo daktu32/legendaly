@@ -27,6 +27,7 @@ Legendalyは多数の環境変数を通じて動作をカスタマイズでき�
 | `QUOTE_COUNT` | 起動時に取得する名言の数 | `100` |
 | `FETCH_INTERVAL` | 名言の表示間隔（秒） | `3` |
 | `LANGUAGE` | 出力言語 | `ja` |
+| `OPENAI_CLIENT_PATH` | OpenAIクライアントモジュールへのパス | `~/.config/common/openaiClients.js` |
 
 ### 表示設定
 
@@ -69,6 +70,11 @@ LANGUAGE=en node legendaly.js
 # フランス語でサイバーパンク調の名言
 LANGUAGE=fr TONE=cyberpunk node legendaly.js
 ```
+
+## OpenAIクライアント設定
+
+`OPENAI_CLIENT_PATH` 環境変数で使用する OpenAI クライアントモジュールのパスを変更できます。
+デフォルトは `~/.config/common/openaiClients.js` です。
 
 ## 表示フォント
 

@@ -19,10 +19,11 @@ It types out beautiful quotes like a sage, then fades them into mist, one by one
 npm install
 ```
 
-You also need an OpenAI API key. The script expects a helper at
-`~/.config/common/openaiClients.js` that provides a configured OpenAI client.
-Create this file (or modify `legendaly.js` to point to your own helper) and set
-up your credentials there. A typical helper uses `dotenv` to load a `.env` file.
+You also need an OpenAI API key. By default the program loads a helper module
+from `~/.config/common/openaiClients.js` that exports a configured OpenAI
+client.  If you keep this helper in another location, set the
+`OPENAI_CLIENT_PATH` environment variable to point to it.  A typical helper uses
+`dotenv` to load a `.env` file with your credentials.
 
 ## Usage
 
@@ -40,6 +41,7 @@ Create a `.env` file to customize behavior with the following environment variab
 - `FETCH_INTERVAL` – Seconds between displaying each quote (default: `3`)
 - `LANGUAGE` – Output language (default: `ja`)
   - Available languages: `ja` (Japanese), `en` (English), `zh` (Chinese), `ko` (Korean), `fr` (French), `es` (Spanish), `de` (German)
+- `OPENAI_CLIENT_PATH` – Path to the helper that exports a configured OpenAI client (default: `~/.config/common/openaiClients.js`)
 
 ### Visual Settings
 - `FIGLET_FONT` – ASCII art font used for the header (default: `slant`)
