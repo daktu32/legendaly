@@ -256,14 +256,26 @@ process.on('exit', () => {
 // Ctrl+C などでの中断時にもカーソルを表示する
 process.on('SIGINT', () => {
   showCursor();
-  console.log('\nプログラムを終了します');
+  // 画面の右下に「Fin」を表示
+  const { columns, rows } = process.stdout;
+  // 最後にスクリーンをクリア
+  console.clear();
+  // Finを右下に表示（少し余白を持たせる）
+  readline.cursorTo(process.stdout, columns - 8, rows - 3);
+  console.log('Fin.');
   process.exit(0);
 });
 
 // SIGTERM シグナルでもカーソルを表示
 process.on('SIGTERM', () => {
   showCursor();
-  console.log('\nプログラムを終了します');
+  // 画面の右下に「Fin」を表示
+  const { columns, rows } = process.stdout;
+  // 最後にスクリーンをクリア
+  console.clear();
+  // Finを右下に表示（少し余白を持たせる）
+  readline.cursorTo(process.stdout, columns - 8, rows - 3);
+  console.log('Fin.');
   process.exit(0);
 });
 
@@ -277,69 +289,37 @@ process.on('uncaughtException', (err) => {
 // プログラム開始時に一度だけカーソルを確実に非表示にする
 hideCursor();
 
-// プログレスバーアニメーションを表示する関数
-async function showProgressBar(topOffset = 9, maxFrames = 30, frameDelay = 150) {
+// ローディングアニメーションを表示する関数
+function showLoadingAnimation(topOffset = 9, frameDelay = 150) {
   const line = topOffset;
-  const barWidth = 30;  // プログレスバーの幅
-  let frame = 0;
-  let shouldContinue = true;
+  const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  let frameIndex = 0;
+  let intervalId = null;
   
-  // アニメーション実行
-  const animationLoop = async () => {
-    while (frame < maxFrames && shouldContinue) {
-      readline.cursorTo(process.stdout, 0, line);
-      readline.clearLine(process.stdout, 0);
-      
-      // 進行状況を計算（0-100%）
-      const progress = Math.min(100, Math.floor((frame / maxFrames) * 100));
-      
-      // プログレスバーの長さを計算
-      const completeLength = Math.floor((barWidth * progress) / 100);
-      const incompleteLength = barWidth - completeLength;
-      
-      // プログレスバーを構築
-      const bar = '[' + '='.repeat(completeLength) + ' '.repeat(incompleteLength) + ']';
-      
-      // プログレスバー文字列を組み立て
-      const progressString = `Generating wisdom ${bar} ${progress}%`;
-      
-      process.stdout.write(progressString);
-      frame++;
-      
-      await sleep(frameDelay);
-    }
-    
-    // 最後に100%を表示
-    if (shouldContinue) {
-      readline.cursorTo(process.stdout, 0, line);
-      readline.clearLine(process.stdout, 0);
-      const completedBar = '[' + '='.repeat(barWidth) + ']';
-      process.stdout.write(`Generating wisdom ${completedBar} 100%`);
-      
-      // 少し待ってからクリア
-      await sleep(frameDelay * 2);
-      readline.cursorTo(process.stdout, 0, line);
-      readline.clearLine(process.stdout, 0);
-    }
-  };
-  
-  // アニメーションを開始
-  animationLoop();
-  
-  // アニメーション停止関数を返す
-  return function() {
-    shouldContinue = false;
-    // 即座に100%を表示してクリア
+  // 画面をクリアする関数
+  const clearLoading = () => {
+    // ローディング表示をクリア
     readline.cursorTo(process.stdout, 0, line);
     readline.clearLine(process.stdout, 0);
-    const completedBar = '[' + '='.repeat(barWidth) + ']';
-    process.stdout.write(`Generating wisdom ${completedBar} 100%`);
-    
-    // 短く待ってからバー部分のみクリア
-    setTimeout(() => {
-      readline.cursorTo(process.stdout, 0, line);
-      readline.clearLine(process.stdout, 0);
-    }, frameDelay);
+  };
+  
+  // インターバルでアニメーションを更新
+  intervalId = setInterval(() => {
+    clearLoading();
+    // ローディングアニメーションを表示
+    const loadingString = `${frames[frameIndex]} Loading wisdom...`;
+    process.stdout.write(loadingString);
+    frameIndex = (frameIndex + 1) % frames.length;
+  }, frameDelay);
+  
+  // 停止関数を返す
+  return function() {
+    if (intervalId !== null) {
+      clearInterval(intervalId);
+      intervalId = null;
+      // 表示をクリア
+      clearLoading();
+    }
   };
 }
 
@@ -544,22 +524,20 @@ async function mainLoop() {
 
   const topOffset = 9;
   
-  // プログレスバーアニメーションを表示しながら名言を取得
-  let stopAnimation = showProgressBar(topOffset);
+  // ローディングアニメーションを開始
+  const stopLoading = showLoadingAnimation(topOffset);
   
   try {
+    // 名言を取得
     const allQuotes = await generateBatchQuotes(Math.min(quoteCount, 25)); // APIの制限を考慮して上限を設ける
     
-    // アニメーションを停止
-    if (typeof stopAnimation === 'function') {
-      stopAnimation();
-    }
+    // ローディングアニメーションを停止して表示をクリア
+    stopLoading();
     
-    // プログレスバー部分のみクリア
-    for (let i = 0; i < 5; i++) {
-      readline.cursorTo(process.stdout, 0, topOffset + i);
-      readline.clearLine(process.stdout, 0);
-    }
+    // 画面全体をクリア（念のため）
+    console.clear();
+    execSync(figletCmd, { stdio: 'inherit' });
+    console.log("Creating mystical wisdom with AI...\n\n");
     
     // 取得した名言をループして表示
     let quoteIndex = 0;
@@ -583,10 +561,8 @@ async function mainLoop() {
     }
   } catch (error) {
     console.error('エラーが発生しました:', error);
-    // エラー発生時もアニメーションを停止
-    if (typeof stopAnimation === 'function') {
-      stopAnimation();
-    }
+    // エラー発生時もローディングアニメーションを停止
+    stopLoading();
     // エラー発生時はカーソルを表示
     showCursor();
   }
