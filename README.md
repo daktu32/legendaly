@@ -63,6 +63,13 @@ Create a `.env` file to customize behavior with the following environment variab
 ### Examples
 
 ```bash
+# Generate quotes in English with a zen atmosphere
+LANGUAGE=en TONE=zen node legendaly.js
+```
+
+![Legendaly](assets/demo_en_zen.png)
+
+```bash
 # Use cyberpunk theme with futuristic fonts
 TONE=cyberpunk FIGLET_FONT=banner3-D node legendaly.js
 
@@ -71,9 +78,6 @@ QUOTE_COUNT=10 DISPLAY_TIME=5000 FETCH_INTERVAL=5 node legendaly.js
 
 # Fast typing speed with slower fade effect
 TYPE_SPEED=10 FADE_STEPS=12 FADE_DELAY=200 node legendaly.js
-
-# Generate quotes in English with a zen atmosphere
-LANGUAGE=en TONE=zen node legendaly.js
 ```
 
 Each generated quote is appended to `legendaly.log` in the following format:
