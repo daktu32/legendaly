@@ -12,6 +12,9 @@ It types out beautiful quotes like a sage, then fades them into mist, one by one
 - Loop through quotes with configurable timing
 - Cyberpunk glitch effects (when using cyberpunk tone)
 - Support for various visual themes and fonts
+- Elegant loading animation during quote generation
+- Stylish "To Be Continued..." exit message
+- Multilingual support for seven languages
 
 ## Installation
 
@@ -62,6 +65,9 @@ QUOTE_COUNT=10 DISPLAY_TIME=5000 FETCH_INTERVAL=5 node legendaly.js
 
 # Fast typing speed with slower fade effect
 TYPE_SPEED=10 FADE_STEPS=12 FADE_DELAY=200 node legendaly.js
+
+# Generate quotes in English with a zen atmosphere
+LANGUAGE=en TONE=zen node legendaly.js
 ```
 
 Each generated quote is appended to `legendaly.log` in the following format:
@@ -78,6 +84,10 @@ Quotes are generated with:
 - The fictional work it's from 
 - A year/time period setting
 
+## Interactive Controls
+
+- Press `Ctrl+C` to exit, showing a stylish "To Be Continued..." message
+
 ## Global CLI
 
 Install the package globally to use the `legendaly` command anywhere:
@@ -86,6 +96,19 @@ Install the package globally to use the `legendaly` command anywhere:
 npm link
 legendaly
 ```
+
+## Future Development Ideas
+
+- **Interactive mode**: Allow users to select and save favorite quotes
+- **Theme combinations**: Mix and match different tones for unique effects
+- **Custom prompts**: Let users specify their own prompt directions
+- **Export options**: Save quotes as images or formatted text files
+- **Quote categories**: Generate quotes based on specific themes or subjects
+- **Notification integration**: Use as a desktop notification system for wisdom breaks
+- **Audio effects**: Add subtle sound effects or background music
+- **Quote rating system**: Rate and filter quotes based on quality or preference
+- **API mode**: Run as a microservice providing quotes via API
+- **Display styles**: More animation styles for quote presentation
 
 ## License
 
