@@ -20,7 +20,7 @@ const fadeDelay = Number(process.env.FADE_DELAY || 100); // フェードアウ�
 const displayTime = Number(process.env.DISPLAY_TIME || 2000); // 表示時間（ミリ秒）
 const language = process.env.LANGUAGE || 'ja'; // 出力言語（デフォルトは日本語）
 const colorToneMap = {
-  cyberpunk: '--freq=0.9 --spread=2.5 --seed 42',
+  cyberpunk: '--freq=0.9 --spread=2.0',
   mellow: '--freq=0.2 --spread=3.0',
   retro: '--freq=0.5 --spread=2.0',
   neon: '--freq=1.0 --spread=3.5',
@@ -30,7 +30,7 @@ const colorToneMap = {
 };
 const lolcatArgs = colorToneMap[tone] || '';
 const figletFont = process.env.FIGLET_FONT || 'slant';
-const figletCmd = `figlet -f ${figletFont} "Legendaly" | lolcat ${lolcatArgs}`;
+const figletCmd = `figlet -f ${figletFont} "Legendaly" | lolcat ${lolcatArgs} --force`;
 const logPath = path.join(__dirname, 'legendaly.log');
 const model = process.env.MODEL || "gpt-4o";
 
@@ -199,13 +199,6 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function glitchText(text, intensity = 0.2) {
-  const noiseChars = ['#', '%', '*', '+', ':', '=', '-'];
-  return text.split('').map(char =>
-    Math.random() < intensity ? noiseChars[Math.floor(Math.random() * noiseChars.length)] : char
-  ).join('');
-}
-
 // シンプルなドットアニメーションを表示する関数
 async function showDotAnimation(topOffset = 9, maxDots = 30, frameDelay = 150) {
   const line = topOffset;
@@ -369,14 +362,6 @@ async function typeOut(lines, delay = 40, topOffset = 9) {
   for (let i = 0; i < lines.length; i++) {
     readline.cursorTo(process.stdout, 0, topOffset + i);
     const line = lines[i];
-
-    if (tone === 'cyberpunk') {
-      for (let f = 0; f < 3; f++) {
-        readline.cursorTo(process.stdout, 0, topOffset + i);
-        process.stdout.write(glitchText(line));
-        await sleep(80);
-      }
-    }
 
     for (const char of line) {
       process.stdout.write(char);
