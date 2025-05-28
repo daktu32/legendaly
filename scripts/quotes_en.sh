@@ -1,24 +1,11 @@
 #!/bin/bash
 
-# Usage message
-usage() {
-  echo "Usage: $0 [options] [file]"
-  echo "Options:"
-  echo "  -d, --directory DIR  Process all .echoes files in the specified directory (default: echoes/)"
-  echo "  -f, --file FILE      Process only the specified log file"
-  echo "  -t, --tone TONE      Extract logs only for the specified tone"
-  echo "  -l, --lang LANG      Extract logs only for the specified language"
-  echo "  -v, --verbose        Show file names and details for each file"
-  echo "  -h, --help           Display this help message"
-  echo ""
-  echo "Examples:"
-  echo "  $0                           # Process all logs in the echoes directory"
-  echo "  $0 -f echoes/20230620153045123-epic-ja.echoes  # Process a specific file"
-  echo "  $0 -t cyberpunk              # Extract only cyberpunk tone logs"
-  echo "  $0 -l en                     # Extract only English logs"
-  echo "  $0 -v                        # Show file names and details for each file"
-  exit 1
-}
+# Source the localization library
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+source "${SCRIPT_DIR}/i18n.sh"
+
+# Set to English language
+set_language "en"
 
 # Default values
 ECHOES_DIR="echoes"
@@ -51,11 +38,11 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      usage
+      show_usage "$(basename "$0")"
       ;;
     *)
-      echo "Unknown option: $1"
-      usage
+      echo "$(t unknown_option): $1"
+      show_usage "$(basename "$0")"
       ;;
   esac
 done
@@ -112,7 +99,7 @@ process_file() {
     if ! $output_quotes; then
       for q in "${quotes[@]}"; do
         echo "$q"
-      fi
+      done
     fi
   else
     echo "Error: File '$file' not found"
@@ -126,7 +113,7 @@ if [[ -n "$SPECIFIC_FILE" ]]; then
 else
   # Process all .echoes files in the directory
   if [[ ! -d "$ECHOES_DIR" ]]; then
-    echo "Error: Directory '$ECHOES_DIR' not found"
+    echo "$(t error_dir_not_found): '$ECHOES_DIR'"
     exit 1
   fi
   
@@ -142,31 +129,11 @@ else
   fi
   
   if [[ -z "$files" ]]; then
-    echo "No matching log files found"
+    echo "$(t no_matching_files)"
     exit 1
   fi
   
-  # In verbose mode, show details file by file, otherwise show all quotes together
-  if ! $VERBOSE; then
-    all_quotes=()
-    
-    for file in $files; do
-      # Use a temporary file to get quotes from each file
-      temp_file=$(mktemp)
-      process_file "$file" > "$temp_file"
-      while IFS= read -r line; do
-        all_quotes+=("$line")
-      done < "$temp_file"
-      rm "$temp_file"
-    done
-    
-    # Display all quotes sorted
-    for quote in "${all_quotes[@]}"; do
-      echo "$quote"
-    done
-  else
-    for file in $files; do
-      process_file "$file"
-    done
-  fi
+  # Call process_all_files with proper parameter
+  # shellcheck disable=SC2086
+  process_all_files "$files"
 fi 
