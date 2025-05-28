@@ -11,14 +11,44 @@ const openaiClientPath = process.env.OPENAI_CLIENT_PATH ||
 const openai = require(openaiClientPath);
 const isFullwidth = require('is-fullwidth-code-point').default;
 
+// 環境変数を取得
 const tone = process.env.TONE || 'epic';
+const language = process.env.LANGUAGE || 'ja'; // 出力言語（デフォルトは日本語）
 const interval = Number(process.env.FETCH_INTERVAL || 3);
 const quoteCount = Number(process.env.QUOTE_COUNT || 100); // 取得する名言の数
 const typeSpeed = Number(process.env.TYPE_SPEED || 40); // 文字表示の速度（ミリ秒）
 const fadeSteps = Number(process.env.FADE_STEPS || 8); // フェードアウトのステップ数
 const fadeDelay = Number(process.env.FADE_DELAY || 100); // フェードアウトの遅延時間（ミリ秒）
 const displayTime = Number(process.env.DISPLAY_TIME || 2000); // 表示時間（ミリ秒）
-const language = process.env.LANGUAGE || 'ja'; // 出力言語（デフォルトは日本語）
+
+// echoesディレクトリが存在しない場合は作成
+const echoesDir = path.join(__dirname, 'echoes');
+if (!fs.existsSync(echoesDir)) {
+  fs.mkdirSync(echoesDir, { recursive: true });
+}
+
+// 現在の実行用のログファイル名を生成
+const now = new Date();
+const formattedTime = formatDateAsCompactString(now);
+const echoesFname = `${formattedTime}-${tone}-${language}.echoes`;
+const echoesPath = path.join(echoesDir, echoesFname);
+
+// 日付をyyyyMMddHHmmssfff形式でフォーマットする関数
+function formatDateAsCompactString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
+  
+  return `${year}${month}${day}${hours}${minutes}${seconds}${milliseconds}`;
+}
+
+// レガシーログパスも残しておく（後方互換性のため）
+const logPath = path.join(__dirname, 'legendaly.log');
+
 const colorToneMap = {
   cyberpunk: '--freq=0.9 --spread=2.0',
   mellow: '--freq=0.2 --spread=3.0',
@@ -31,7 +61,6 @@ const colorToneMap = {
 const lolcatArgs = colorToneMap[tone] || '';
 const figletFont = process.env.FIGLET_FONT || 'slant';
 const figletCmd = `figlet -f ${figletFont} "Legendaly" | lolcat ${lolcatArgs} --force`;
-const logPath = path.join(__dirname, 'legendaly.log');
 const model = process.env.MODEL || "gpt-4o";
 
 // 言語に応じたシステムロールを生成する関数
@@ -486,8 +515,13 @@ async function generateBatchQuotes(count) {
         const source = sourceMatch ? sourceMatch[1].trim() : 'Unknown';
         const date = dateMatch ? dateMatch[1].trim() : new Date().toISOString().split("T")[0];
 
-        const logLine = `[${date}] ${displayUser}『${source}』：「${quote}」\n`;
+        // toneとlanguageの情報を含めたログを記録
+        const timestamp = new Date().toISOString();
+        const logLine = `[${date}] ${displayUser}『${source}』：「${quote}」 (tone: ${tone}, lang: ${language}, time: ${timestamp})\n`;
+        
+        // 従来のログファイルとechoesディレクトリの両方に保存
         fs.appendFileSync(logPath, logLine);
+        fs.appendFileSync(echoesPath, logLine);
 
         quotes.push([
           `  --- ${quote}`,

@@ -15,6 +15,7 @@ It types out beautiful quotes like a sage, then fades them into mist, one by one
 - Elegant loading animation during quote generation
 - Stylish "To Be Continued..." exit message
 - Multilingual support for seven languages
+- Organized quote logging with metadata in the `echoes/` directory
 
 ## Installation
 
@@ -73,8 +74,16 @@ LANGUAGE=en TONE=zen node legendaly.js
 Each generated quote is appended to `legendaly.log` in the following format:
 
 ```
-[YYYY] キャラクター名『作品名』：「名言」
+[YYYY] キャラクター名『作品名』：「名言」 (tone: epic, lang: ja, time: 2023-06-20T15:30:45.123Z)
 ```
+
+Additionally, quotes are organized in the `echoes/` directory with files named by session:
+
+```
+echoes/20230620153045123-epic-ja.echoes
+```
+
+This makes it easy to browse quotes by generation time, tone, and language.
 
 ## Quote Format
 
