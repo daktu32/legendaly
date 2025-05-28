@@ -256,26 +256,26 @@ process.on('exit', () => {
 // Ctrl+C などでの中断時にもカーソルを表示する
 process.on('SIGINT', () => {
   showCursor();
-  // 画面の右下に「Fin」を表示
+  // 画面の右下に表示
   const { columns, rows } = process.stdout;
   // 最後にスクリーンをクリア
   console.clear();
-  // Finを右下に表示（少し余白を持たせる）
-  readline.cursorTo(process.stdout, columns - 8, rows - 3);
-  console.log('Fin.');
+  // To Be Continued... を右下に表示
+  readline.cursorTo(process.stdout, columns - 22, rows - 3);
+  console.log('To Be Continued...');
   process.exit(0);
 });
 
 // SIGTERM シグナルでもカーソルを表示
 process.on('SIGTERM', () => {
   showCursor();
-  // 画面の右下に「Fin」を表示
+  // 画面の右下に表示
   const { columns, rows } = process.stdout;
   // 最後にスクリーンをクリア
   console.clear();
-  // Finを右下に表示（少し余白を持たせる）
-  readline.cursorTo(process.stdout, columns - 8, rows - 3);
-  console.log('Fin.');
+  // To Be Continued... を右下に表示
+  readline.cursorTo(process.stdout, columns - 22, rows - 3);
+  console.log('To Be Continued...');
   process.exit(0);
 });
 
@@ -534,10 +534,11 @@ async function mainLoop() {
     // ローディングアニメーションを停止して表示をクリア
     stopLoading();
     
-    // 画面全体をクリア（念のため）
-    console.clear();
-    execSync(figletCmd, { stdio: 'inherit' });
-    console.log("Creating mystical wisdom with AI...\n\n");
+    // ローディングアニメーション領域のみをクリア（ロゴとメッセージは保持）
+    for (let i = 0; i < 5; i++) {
+      readline.cursorTo(process.stdout, 0, topOffset + i);
+      readline.clearLine(process.stdout, 0);
+    }
     
     // 取得した名言をループして表示
     let quoteIndex = 0;
