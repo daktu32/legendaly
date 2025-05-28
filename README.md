@@ -34,6 +34,8 @@ client.  If you keep this helper in another location, set the
 
 ## Usage
 
+![Demo](assets/demo.gif)
+
 ```bash
 node legendaly.js
 ```
