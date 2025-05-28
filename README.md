@@ -15,6 +15,7 @@ It types out beautiful quotes like a sage, then fades them into mist, one by one
 - Elegant loading animation during quote generation
 - Stylish "To Be Continued..." exit message
 - Multilingual support for seven languages
+- Language resources are stored in the `locales/` directory for easy customization
 - Organized quote logging with metadata in the `echoes/` directory
 
 ## Installation
@@ -96,6 +97,11 @@ Quotes are generated with:
 ## Interactive Controls
 
 - Press `Ctrl+C` to exit, showing a stylish "To Be Continued..." message
+
+## Localization Files
+
+All language-specific prompts and patterns are stored in `locales/<code>.js`.
+To add or modify a language, edit the corresponding file and set the `LANGUAGE` environment variable.
 
 ## Global CLI
 
