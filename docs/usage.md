@@ -71,6 +71,8 @@ LANGUAGE=en node legendaly.js
 LANGUAGE=fr TONE=cyberpunk node legendaly.js
 ```
 
+言語リソースは `locales/` ディレクトリに整理されており、追加や修正は対応するファイルだけを編集すれば反映されます。
+
 ## OpenAIクライアント設定
 
 `OPENAI_CLIENT_PATH` 環境変数で使用する OpenAI クライアントモジュールのパスを変更できます。
