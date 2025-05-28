@@ -6,7 +6,9 @@ const fs = require('fs');
 const readline = require('readline');
 const { execSync } = require('child_process');
 require('dotenv').config();
-const openai = require(path.join(os.homedir(), '.config', 'common', 'openaiClients.js'));
+const openaiClientPath = process.env.OPENAI_CLIENT_PATH ||
+  path.join(os.homedir(), '.config', 'common', 'openaiClients.js');
+const openai = require(openaiClientPath);
 const isFullwidth = require('is-fullwidth-code-point').default;
 
 const tone = process.env.TONE || 'epic';
