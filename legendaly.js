@@ -421,115 +421,22 @@ async function generateBatchQuotes(count) {
     });
 
     const output = res.choices[0].message.content.trim();
-    
-    // 出力を "---" で分割して複数の名言に分ける
-    const quoteBlocks = output.split(/\s*---\s*/).filter(block => block.trim() !== '');
+    const parsed = parseQuotesFromOutput(output, language);
+
     const quotes = [];
-    
-    for (const block of quoteBlocks) {
-      // 各言語のフォーマットに対応するための正規表現パターン
-      const patterns = {
-        // 日本語パターン
-        ja: {
-          quote: /名言\s*:\s*(.*?)(?:\n|$)/m,
-          user: /キャラクター名\s*:\s*(.*?)(?:\n|$)/m,
-          source: /作品名\s*:\s*(.*?)(?:\n|$)/m,
-          date: /西暦\s*:\s*(.*?)(?:\n|$)/m
-        },
-        // 英語パターン
-        en: {
-          quote: /Quote\s*:\s*(.*?)(?:\n|$)/mi,
-          user: /Character Name\s*:\s*(.*?)(?:\n|$)/mi,
-          source: /Work Title\s*:\s*(.*?)(?:\n|$)/mi,
-          date: /Year\s*:\s*(.*?)(?:\n|$)/mi
-        },
-        // 中国語パターン
-        zh: {
-          quote: /名言\s*:\s*(.*?)(?:\n|$)/m,
-          user: /角色名\s*:\s*(.*?)(?:\n|$)/m,
-          source: /作品名\s*:\s*(.*?)(?:\n|$)/m,
-          date: /年代\s*:\s*(.*?)(?:\n|$)/m
-        },
-        // 韓国語パターン
-        ko: {
-          quote: /명언\s*:\s*(.*?)(?:\n|$)/m,
-          user: /캐릭터 이름\s*:\s*(.*?)(?:\n|$)/m,
-          source: /작품명\s*:\s*(.*?)(?:\n|$)/m,
-          date: /연도\s*:\s*(.*?)(?:\n|$)/m
-        },
-        // フランス語パターン
-        fr: {
-          quote: /Citation\s*:\s*(.*?)(?:\n|$)/mi,
-          user: /Nom du Personnage\s*:\s*(.*?)(?:\n|$)/mi,
-          source: /Titre de l['']Œuvre\s*:\s*(.*?)(?:\n|$)/mi,
-          date: /Année\s*:\s*(.*?)(?:\n|$)/mi
-        },
-        // スペイン語パターン
-        es: {
-          quote: /Cita\s*:\s*(.*?)(?:\n|$)/mi,
-          user: /Nombre del Personaje\s*:\s*(.*?)(?:\n|$)/mi,
-          source: /Título de la Obra\s*:\s*(.*?)(?:\n|$)/mi,
-          date: /Año\s*:\s*(.*?)(?:\n|$)/mi
-        },
-        // ドイツ語パターン
-        de: {
-          quote: /Zitat\s*:\s*(.*?)(?:\n|$)/mi,
-          user: /Charaktername\s*:\s*(.*?)(?:\n|$)/mi,
-          source: /Werktitel\s*:\s*(.*?)(?:\n|$)/mi,
-          date: /Jahr\s*:\s*(.*?)(?:\n|$)/mi
-        }
-      };
-      
-      // 選択された言語のパターンを使用（見つからない場合は全パターンを試す）
-      let patternSet = patterns[language];
-      let quoteMatch = null;
-      let userMatch = null;
-      let sourceMatch = null;
-      let dateMatch = null;
-      
-      // 選択された言語のパターンで検索
-      if (patternSet) {
-        quoteMatch = block.match(patternSet.quote);
-        userMatch = block.match(patternSet.user);
-        sourceMatch = block.match(patternSet.source);
-        dateMatch = block.match(patternSet.date);
-      }
-      
-      // 見つからなかった場合は、全言語のパターンを試す
-      if (!quoteMatch) {
-        for (const lang in patterns) {
-          patternSet = patterns[lang];
-          quoteMatch = block.match(patternSet.quote);
-          if (quoteMatch) {
-            userMatch = block.match(patternSet.user);
-            sourceMatch = block.match(patternSet.source);
-            dateMatch = block.match(patternSet.date);
-            break;
-          }
-        }
-      }
+    for (const { quote, user, source, date } of parsed) {
+      const timestamp = new Date().toISOString();
+      const logLine = `[${date}] ${user}『${source}』：「${quote}」 (tone: ${tone}, lang: ${language}, time: ${timestamp})\n`;
 
-      if (quoteMatch) {
-        const quote = quoteMatch ? quoteMatch[1].trim() : '（名言取得失敗）';
-        const displayUser = userMatch ? userMatch[1].trim() : 'Unknown';
-        const source = sourceMatch ? sourceMatch[1].trim() : 'Unknown';
-        const date = dateMatch ? dateMatch[1].trim() : new Date().toISOString().split("T")[0];
+      fs.appendFileSync(logPath, logLine);
+      fs.appendFileSync(echoesPath, logLine);
 
-        // toneとlanguageの情報を含めたログを記録
-        const timestamp = new Date().toISOString();
-        const logLine = `[${date}] ${displayUser}『${source}』：「${quote}」 (tone: ${tone}, lang: ${language}, time: ${timestamp})\n`;
-        
-        // 従来のログファイルとechoesディレクトリの両方に保存
-        fs.appendFileSync(logPath, logLine);
-        fs.appendFileSync(echoesPath, logLine);
-
-        quotes.push([
-          `  --- ${quote}`,
-          `     ${displayUser}『${source}』 ${date}`
-        ]);
-      }
+      quotes.push([
+        `  --- ${quote}`,
+        `     ${user}『${source}』 ${date}`
+      ]);
     }
-    
+
     return quotes;
     
   } catch (err) {
@@ -603,4 +510,8 @@ async function mainLoop() {
   }
 }
 
-mainLoop();
+if (require.main === module) {
+  mainLoop();
+}
+
+module.exports = { parseQuotesFromOutput };
