@@ -11,7 +11,7 @@ const config = require('./config');
 const openai = require(config.openaiClientPath);
 const { generateBatchQuotes } = require('./lib/quotes');
 const { initializeLogPaths, rotateLogIfNeeded, cleanOldLogs } = require('./lib/logger');
-const { setupSignalHandlers, displayHeader, displayQuoteLoop, showLoadingAnimation } = require('./lib/animation');
+const { setupSignalHandlers, displayHeader, displayQuoteLoop, showLoadingAnimation, calculateLayout } = require('./lib/animation');
 
 // 設定の取得
 const {
@@ -81,13 +81,14 @@ setupSignalHandlers(showCursor);
 async function mainLoop() {
   console.clear();
   
+  // 美的レイアウト計算
+  const layout = calculateLayout();
+  
   // ヘッダーを表示
   displayHeader(figletFont, lolcatArgs);
-
-  const topOffset = 9;
   
-  // ローディングアニメーションを開始
-  const stopLoading = showLoadingAnimation(topOffset);
+  // ローディングアニメーションを開始（動的位置計算）
+  const stopLoading = showLoadingAnimation(layout.quoteTopOffset, 150, tone);
   
   try {
     // 名言を取得
@@ -107,14 +108,14 @@ async function mainLoop() {
     // ローディングアニメーションを停止して表示をクリア
     stopLoading();
     
-    // ローディングアニメーション領域のみをクリア（ロゴとメッセージは保持）
-    for (let i = 0; i < 5; i++) {
-      readline.cursorTo(process.stdout, 0, topOffset + i);
+    // ローディングアニメーション領域をクリア（より広範囲）
+    for (let i = 0; i < 8; i++) {
+      readline.cursorTo(process.stdout, 0, layout.quoteTopOffset + i);
       readline.clearLine(process.stdout, 0);
     }
     
-    // 名言を表示するループ
-    await displayQuoteLoop(allQuotes, typeSpeed, displayTime, fadeSteps, fadeDelay, interval, topOffset);
+    // 名言を美的レイアウトで表示するループ
+    await displayQuoteLoop(allQuotes, typeSpeed, displayTime, fadeSteps, fadeDelay, interval, figletFont, tone);
     
   } catch (error) {
     console.error('エラーが発生しました:', error);
