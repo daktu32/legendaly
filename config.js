@@ -15,19 +15,92 @@ const colorToneMap = {
   default: ''
 };
 
+// 設定値のバリデーション関数
+function validateNumber(value, min, max, defaultValue, name) {
+  const num = Number(value);
+  if (isNaN(num)) {
+    console.warn(`警告: ${name} の値が無効です。デフォルト値 ${defaultValue} を使用します。`);
+    return defaultValue;
+  }
+  if (num < min || num > max) {
+    console.warn(`警告: ${name} の値は ${min} から ${max} の範囲内である必要があります。デフォルト値 ${defaultValue} を使用します。`);
+    return defaultValue;
+  }
+  return num;
+}
+
+function validateString(value, allowedValues, defaultValue, name) {
+  if (!allowedValues.includes(value)) {
+    console.warn(`警告: ${name} の値 '${value}' は無効です。許可される値: ${allowedValues.join(', ')}。デフォルト値 '${defaultValue}' を使用します。`);
+    return defaultValue;
+  }
+  return value;
+}
+
+function validatePath(value, defaultValue, name) {
+  if (!value) {
+    return defaultValue;
+  }
+  // パスが ~ で始まる場合はホームディレクトリに展開
+  const expandedPath = value.startsWith('~') 
+    ? path.join(os.homedir(), value.slice(1))
+    : value;
+  return expandedPath;
+}
+
+// サポートされている値
+const supportedTones = ['epic', 'cyberpunk', 'mellow', 'retro', 'neon', 'zen'];
+const supportedLanguages = ['ja', 'en', 'zh', 'ko', 'fr', 'es', 'de'];
+const supportedModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'];
+
 module.exports = {
-  openaiClientPath:
-    process.env.OPENAI_CLIENT_PATH ||
+  openaiClientPath: validatePath(
+    process.env.OPENAI_CLIENT_PATH,
     path.join(os.homedir(), '.config', 'common', 'openaiClients.js'),
-  tone: process.env.TONE || 'epic',
-  language: process.env.LANGUAGE || 'ja',
-  fetchInterval: Number(process.env.FETCH_INTERVAL || 3),
-  quoteCount: Number(process.env.QUOTE_COUNT || 100),
-  typeSpeed: Number(process.env.TYPE_SPEED || 40),
-  fadeSteps: Number(process.env.FADE_STEPS || 8),
-  fadeDelay: Number(process.env.FADE_DELAY || 100),
-  displayTime: Number(process.env.DISPLAY_TIME || 2000),
+    'OPENAI_CLIENT_PATH'
+  ),
+  tone: validateString(
+    process.env.TONE || 'epic',
+    supportedTones,
+    'epic',
+    'TONE'
+  ),
+  language: validateString(
+    process.env.LANGUAGE || 'ja',
+    supportedLanguages,
+    'ja',
+    'LANGUAGE'
+  ),
+  fetchInterval: validateNumber(
+    process.env.FETCH_INTERVAL || 3,
+    1, 300, 3, 'FETCH_INTERVAL'
+  ),
+  quoteCount: validateNumber(
+    process.env.QUOTE_COUNT || 100,
+    1, 1000, 100, 'QUOTE_COUNT'
+  ),
+  typeSpeed: validateNumber(
+    process.env.TYPE_SPEED || 40,
+    1, 1000, 40, 'TYPE_SPEED'
+  ),
+  fadeSteps: validateNumber(
+    process.env.FADE_STEPS || 8,
+    1, 50, 8, 'FADE_STEPS'
+  ),
+  fadeDelay: validateNumber(
+    process.env.FADE_DELAY || 100,
+    10, 5000, 100, 'FADE_DELAY'
+  ),
+  displayTime: validateNumber(
+    process.env.DISPLAY_TIME || 2000,
+    100, 60000, 2000, 'DISPLAY_TIME'
+  ),
   figletFont: process.env.FIGLET_FONT || 'slant',
-  model: process.env.MODEL || 'gpt-4o',
+  model: validateString(
+    process.env.MODEL || 'gpt-4o',
+    supportedModels,
+    'gpt-4o',
+    'MODEL'
+  ),
   colorToneMap
 };
