@@ -10,7 +10,7 @@ const {
 const config = require('./config');
 const openai = require(config.openaiClientPath);
 const { generateBatchQuotes } = require('./lib/quotes');
-const { initializeLogPaths, rotateLogIfNeeded, cleanOldLogs } = require('./lib/logger');
+const { initializeLogPaths, rotateLogIfNeeded, cleanOldLogs, Timer, verboseLog } = require('./lib/logger');
 const { setupSignalHandlers, displayHeader, displayQuoteLoop, showLoadingAnimation, calculateLayout } = require('./lib/animation');
 
 // 設定の取得
@@ -25,6 +25,7 @@ const {
   displayTime,
   figletFont,
   model,
+  verbose,
   colorToneMap
 } = config;
 const interval = fetchInterval;
@@ -79,18 +80,26 @@ hideCursor();
 setupSignalHandlers(showCursor);
 
 async function mainLoop() {
+  const mainTimer = new Timer('メインループ', verbose);
+  
   console.clear();
+  
+  verboseLog(`設定: tone=${tone}, lang=${language}, model=${model}, count=${quoteCount}`, verbose);
   
   // 美的レイアウト計算
   const layout = calculateLayout();
+  mainTimer.mark('レイアウト計算完了');
   
   // ヘッダーを表示
   displayHeader(figletFont, lolcatArgs);
+  mainTimer.mark('ヘッダー表示完了');
   
   // ローディングアニメーションを開始（動的位置計算）
   const stopLoading = showLoadingAnimation(layout.quoteTopOffset, 150, tone);
+  mainTimer.mark('ローディングアニメ開始');
   
   try {
+    verboseLog('名言生成処理を開始', verbose);
     // 名言を取得
     const allQuotes = await generateBatchQuotes(
       openai, 
@@ -102,11 +111,14 @@ async function mainLoop() {
       tone, 
       logPath, 
       echoesPath, 
-      Math.min(quoteCount, 25)
+      Math.min(quoteCount, 10),
+      verbose
     );
+    mainTimer.mark('名言生成完了');
     
     // ローディングアニメーションを停止して表示をクリア
     stopLoading();
+    mainTimer.mark('ローディング停止');
     
     // ローディングアニメーション領域をクリア（より広範囲）
     for (let i = 0; i < 8; i++) {
@@ -114,8 +126,11 @@ async function mainLoop() {
       readline.clearLine(process.stdout, 0);
     }
     
+    verboseLog('名言表示ループを開始', verbose);
     // 名言を美的レイアウトで表示するループ
     await displayQuoteLoop(allQuotes, typeSpeed, displayTime, fadeSteps, fadeDelay, interval, figletFont, tone);
+    
+    mainTimer.end();
     
   } catch (error) {
     console.error('エラーが発生しました:', error);

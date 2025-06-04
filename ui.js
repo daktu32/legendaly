@@ -96,8 +96,9 @@ function showLoadingAnimation(topOffset = 9, frameDelay = 150, tone = 'epic') {
     
     // ローディングテキストを中央寄せ
     const { columns } = process.stdout;
+    const safeColumns = columns || 80;
     const visualLength = loadingText.length;
-    const indent = Math.max(0, Math.floor((columns - visualLength) / 2));
+    const indent = Math.max(0, Math.floor((safeColumns - visualLength) / 2));
     
     readline.cursorTo(process.stdout, indent, line);
     process.stdout.write(loadingText);

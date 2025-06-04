@@ -72,12 +72,12 @@ module.exports = {
     'LANGUAGE'
   ),
   fetchInterval: validateNumber(
-    process.env.FETCH_INTERVAL || 3,
-    1, 300, 3, 'FETCH_INTERVAL'
+    process.env.FETCH_INTERVAL || 1,
+    1, 300, 1, 'FETCH_INTERVAL'
   ),
   quoteCount: validateNumber(
-    process.env.QUOTE_COUNT || 100,
-    1, 1000, 100, 'QUOTE_COUNT'
+    process.env.QUOTE_COUNT || 10,
+    1, 1000, 10, 'QUOTE_COUNT'
   ),
   typeSpeed: validateNumber(
     process.env.TYPE_SPEED || 40,
@@ -97,10 +97,11 @@ module.exports = {
   ),
   figletFont: process.env.FIGLET_FONT || 'slant',
   model: validateString(
-    process.env.MODEL || 'gpt-4o',
+    process.env.MODEL || 'gpt-4o-mini',
     supportedModels,
-    'gpt-4o',
+    'gpt-4o-mini',
     'MODEL'
   ),
+  verbose: process.env.VERBOSE === 'true' || process.env.VERBOSE === '1',
   colorToneMap
 };

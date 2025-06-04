@@ -46,8 +46,8 @@ test('config validation', async (t) => {
         
         // デフォルト値が使用されているか確認
         const config = JSON.parse(output);
-        assert.strictEqual(config.fetchInterval, 3, 'Invalid FETCH_INTERVAL should use default');
-        assert.strictEqual(config.quoteCount, 100, 'Negative QUOTE_COUNT should use default');
+        assert.strictEqual(config.fetchInterval, 1, 'Invalid FETCH_INTERVAL should use default');
+        assert.strictEqual(config.quoteCount, 25, 'Negative QUOTE_COUNT should use default');
         assert.strictEqual(config.typeSpeed, 40, 'Out of range TYPE_SPEED should use default');
         assert.strictEqual(config.fadeSteps, 8, 'Out of range FADE_STEPS should use default');
         resolve();
@@ -97,7 +97,7 @@ test('config validation', async (t) => {
         const config = JSON.parse(output);
         assert.strictEqual(config.tone, 'epic', 'Invalid TONE should use default');
         assert.strictEqual(config.language, 'ja', 'Invalid LANGUAGE should use default');
-        assert.strictEqual(config.model, 'gpt-4o', 'Invalid MODEL should use default');
+        assert.strictEqual(config.model, 'gpt-4o-mini', 'Invalid MODEL should use default');
         resolve();
       });
     });
