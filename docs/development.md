@@ -4,72 +4,141 @@
 
 Legendalyは以下のコンポーネントで構成されています：
 
-1. **設定管理**: 環境変数とデフォルト値の管理
-2. **API連携**: OpenAI GPT-4との通信
-3. **テキスト生成**: 複数の名言を一括生成
-4. **表示エンジン**: タイプライター効果とフェードアウト処理
-5. **メインループ**: 名言の循環表示
+1. **設定管理**: `config.js`による環境変数の集中管理とバリデーション
+2. **API連携**: OpenAI GPT-4との通信（自動リトライ機能付き）
+3. **テキスト生成**: `lib/quotes.js`による複数の名言を一括生成
+4. **表示エンジン**: `lib/animation.js`によるタイプライター効果とフェードアウト処理
+5. **ログ管理**: `lib/logger.js`によるログローテーションと自動クリーンアップ
+6. **メインループ**: 名言の循環表示とエラーハンドリング
 
 ## コードの構成
 
 ```
-legendaly.js             # メインスクリプト
-package.json             # 依存関係と設定
-.env                     # 環境変数（任意）
-legendaly.log            # 生成された名言のログ
+legendaly.js             # メインエントリーポイント
+config.js                # 設定管理とバリデーション
+ui.js                    # UIユーティリティ関数
+lib/
+  ├── quotes.js          # 名言生成ロジック（リトライ機能付き）
+  ├── logger.js          # ログ管理（ローテーション、クリーンアップ）
+  └── animation.js       # アニメーション表示処理
+locales/                 # 言語リソース
+echoes/                  # セッション別の名言ログ
+test/                    # テストスイート
+  ├── config.test.js     # 設定バリデーションのテスト
+  ├── quotes.test.js     # 名言生成とエラーハンドリングのテスト
+  └── logger.test.js     # ログ管理機能のテスト
 ```
 
 ## 主要な関数
 
-### `generateBatchQuotes(count)`
+### 設定管理（config.js）
 
+#### `validateNumber(value, min, max, defaultValue, name)`
+数値型の環境変数をバリデーションします。
+
+```javascript
+function validateNumber(value, min, max, defaultValue, name) {
+  // 数値チェックと範囲チェック
+  // 無効な値の場合は警告を表示してデフォルト値を返す
+}
+```
+
+#### `validateString(value, allowedValues, defaultValue, name)`
+文字列型の環境変数をバリデーションします。
+
+```javascript
+function validateString(value, allowedValues, defaultValue, name) {
+  // 許可された値のリストと照合
+  // 無効な値の場合は警告を表示してデフォルト値を返す
+}
+```
+
+### 名言生成（lib/quotes.js）
+
+#### `callOpenAIWithRetry(openai, model, messages, maxRetries, initialDelay)`
+API呼び出しを自動リトライ機能付きで実行します。
+
+```javascript
+async function callOpenAIWithRetry(openai, model, messages, maxRetries = 3, initialDelay = 1000) {
+  // 指数バックオフでリトライ
+  // 401, 403エラーはリトライしない
+}
+```
+
+#### `generateBatchQuotes(openai, model, role, createBatchPrompt, allPatterns, language, tone, logPath, echoesPath, count)`
 一度のAPI呼び出しで複数の名言を生成します。
 
 ```javascript
-async function generateBatchQuotes(count) {
+async function generateBatchQuotes(...) {
   // OpenAI APIを呼び出し、結果をパース
   // 各名言は "---" で区切られる
+  // エラー時は適切なメッセージを返す
 }
 ```
 
-### `typeOut(lines, delay, topOffset)`
+### ログ管理（lib/logger.js）
 
-タイプライター風に文字を表示します。
+#### `rotateLogIfNeeded(logPath, maxSizeBytes)`
+ログファイルのサイズをチェックし、必要に応じてローテーションします。
 
 ```javascript
-async function typeOut(lines, delay, topOffset) {
-  // 1文字ずつ表示
-  // サイバーパンクモードではグリッチ効果も適用
+function rotateLogIfNeeded(logPath, maxSizeBytes = 10 * 1024 * 1024) {
+  // 10MBを超えたらタイムスタンプ付きでバックアップ
 }
 ```
 
-### `fadeOutFullwidth(lines, topOffset, steps, stepDelay)`
-
-日本語の全角文字にも対応したフェードアウト効果を適用します。
+#### `cleanOldLogs(logDir, daysToKeep)`
+古いログファイルを自動削除します。
 
 ```javascript
-async function fadeOutFullwidth(lines, topOffset, steps, stepDelay) {
-  // 文字を徐々に空白に置き換えて消していく
+function cleanOldLogs(logDir, daysToKeep = 30) {
+  // 30日以上経過したファイルを削除
 }
 ```
 
-### `mainLoop()`
+### アニメーション表示（lib/animation.js）
 
-アプリケーションのメインループです。
+#### `displayHeader(figletFont, lolcatArgs)`
+タイトルヘッダーを表示します。
 
-```javascript
-async function mainLoop() {
-  // 最初に指定した数の名言を取得
-  // 名言を循環表示
-}
-```
+#### `displayQuoteLoop(quotes, typeSpeed, displayTime, fadeSteps, fadeDelay, interval, topOffset)`
+名言を循環表示するメインループです。
+
+#### `setupSignalHandlers(showCursor)`
+Ctrl+Cなどのシグナルハンドリングを設定します。
+
+## エラーハンドリング
+
+### API呼び出しのエラー処理
+
+Legendalyは以下のエラーを適切に処理します：
+
+1. **ネットワークエラー** (ENOTFOUND, ECONNREFUSED)
+   - メッセージ: "ネットワーク接続を確認してください"
+
+2. **認証エラー** (401)
+   - メッセージ: "OpenAI APIキーを確認してください"
+   - リトライなし
+
+3. **レート制限** (429)
+   - メッセージ: "APIレート制限に達しました"
+   - 自動リトライあり
+
+4. **その他のエラー**
+   - メッセージ: "予期せぬエラーが発生しました"
+   - 自動リトライあり
+
+### プロセス終了時の処理
+
+- カーソルの表示を確実に復元
+- "To Be Continued..." メッセージの表示
+- リソースの適切なクリーンアップ
 
 ## カスタマイズガイド
 
 ### 新しいトーンの追加
 
-`colorToneMap`オブジェクトに新しいトーンを追加できます：
-
+1. `config.js`の`colorToneMap`に新しいトーンを追加：
 ```javascript
 const colorToneMap = {
   existing_tone: '...',
@@ -77,26 +146,27 @@ const colorToneMap = {
 };
 ```
 
-### プロンプトのカスタマイズ
-
-システムロールとユーザープロンプトを修正することで、生成される名言の特性を変更できます：
-
+2. `config.js`の`supportedTones`配列に追加：
 ```javascript
-const role = `...`;
-function createBatchPrompt(count) {
-  return `...`;
-}
+const supportedTones = ['epic', 'cyberpunk', ..., 'new_tone'];
 ```
 
-### 出力フォーマットの変更
+### 新しい言語の追加
 
-名言の表示形式やログ形式は以下の部分で変更できます：
+1. `locales/`ディレクトリに新しい言語ファイルを作成
+2. 必要なパターンとプロンプトを定義
+3. `config.js`の`supportedLanguages`に追加
+
+### プロンプトのカスタマイズ
+
+各言語ファイルの`system`と`createBatchPrompt`を修正：
 
 ```javascript
-return [
-  `  --- ${quote}`,
-  `     　　${displayUser}『${source}』 ${date}`
-];
+module.exports = {
+  system: `カスタムシステムプロンプト...`,
+  createBatchPrompt: (tone, count) => `カスタムユーザープロンプト...`,
+  patterns: { ... }
+};
 ```
 
 ## パフォーマンス最適化
@@ -109,26 +179,60 @@ return [
 
 ### メモリ使用量
 
-一度に多くの名言を取得すると、メモリ使用量が増加します。リソースの制約がある環境では、`QUOTE_COUNT`を小さくしてください。
+- 一度に多くの名言を取得すると、メモリ使用量が増加
+- リソースの制約がある環境では、`QUOTE_COUNT`を小さく設定
+- ログローテーション機能により、ログファイルの肥大化を防止
 
 ## 依存関係
 
 - **openai**: OpenAI API連携
 - **dotenv**: 環境変数の管理
 - **is-fullwidth-code-point**: 全角文字の判定
-- **figlet**: ASCIIアート生成
-- **lolcat**: カラフルなテキスト表示
+- **figlet**: ASCIIアート生成（外部コマンド）
+- **lolcat**: カラフルなテキスト表示（外部コマンド）
+
+## テスト
+
+```bash
+npm test
+```
+
+テストカバレッジ：
+- 設定バリデーション
+- API呼び出しとリトライロジック
+- エラーハンドリング
+- ログ管理機能
+- 各言語のパース処理
 
 ## トラブルシューティング
 
+### 設定値バリデーションエラー
+
+無効な設定値を指定した場合、警告メッセージが表示されデフォルト値が使用されます。
+有効な値の範囲はREADMEまたは`docs/usage.md`を参照してください。
+
 ### OpenAI API関連の問題
 
-APIキーが正しく設定されていることを確認してください。また、APIのレート制限や使用量制限に注意してください。
+1. APIキーが正しく設定されていることを確認
+2. APIのレート制限や使用量制限に注意
+3. ネットワーク接続を確認
+4. 自動リトライが機能しているか確認（最大3回）
 
 ### 表示の問題
 
-ターミナルの文字コードや表示幅の設定によっては、フェードアウト効果が正しく表示されないことがあります。その場合は、`FADE_STEPS`や`FADE_DELAY`を調整してみてください。
+ターミナルの文字コードや表示幅の設定によっては、フェードアウト効果が正しく表示されないことがあります：
+- `FADE_STEPS`や`FADE_DELAY`を調整
+- ターミナルのフォント設定を確認
+- Unicode対応を確認
+
+### ログファイルの問題
+
+- `legendaly.log`が10MBを超えると自動的にローテーション
+- 30日以上古いechoesファイルは自動削除
+- 手動でクリーンアップする場合は`echoes/`ディレクトリを確認
 
 ### パフォーマンスの問題
 
-多くの名言を取得すると起動時間が長くなることがあります。開発時は`QUOTE_COUNT`を小さくして起動を高速化できます。 
+- 多くの名言を取得すると起動時間が長くなる
+- 開発時は`QUOTE_COUNT`を小さく（例: 10）設定
+- API呼び出しのタイムアウトは自動リトライで対処
