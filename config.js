@@ -76,8 +76,8 @@ module.exports = {
     1, 300, 1, 'FETCH_INTERVAL'
   ),
   quoteCount: validateNumber(
-    process.env.QUOTE_COUNT || 10,
-    1, 1000, 10, 'QUOTE_COUNT'
+    process.env.QUOTE_COUNT || 25,
+    1, 1000, 25, 'QUOTE_COUNT'
   ),
   typeSpeed: validateNumber(
     process.env.TYPE_SPEED || 40,
