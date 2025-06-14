@@ -15,7 +15,7 @@ module.exports = {
 - 名言不要使用引号。
 - 每个名言后必须使用"---"进行分隔。`,
 
-  createBatchPrompt: (tone, count) => `请按照符合tone: ${tone}的氛围，按照上述输出格式生成${count}个名言和角色信息。
+  createBatchPrompt: (tone, count, category = '') => `请按照符合tone: ${tone}的氛围，按照上述输出格式生成${count}个${category ? category + '主题的' : ''}名言和角色信息。
 请确保每个名言后面都有 "---" 作为分隔符。
 请用中文输出。`,
 

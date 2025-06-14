@@ -6,12 +6,16 @@ require('dotenv').config();
 const {
   hideCursor,
   showCursor,
+  playSound
 } = require('./ui');
 const config = require('./config');
 const openai = require(config.openaiClientPath);
 const { generateBatchQuotes } = require('./lib/quotes');
 const { initializeLogPaths, rotateLogIfNeeded, cleanOldLogs, Timer, verboseLog } = require('./lib/logger');
 const { setupSignalHandlers, displayHeader, displayQuoteLoop, showLoadingAnimation, calculateLayout } = require('./lib/animation');
+const { promptForActions } = require('./lib/interactive');
+const { filterByRating } = require('./lib/ratings');
+const { sendNotification } = require('./lib/notify');
 
 // 設定の取得
 const {
@@ -26,18 +30,30 @@ const {
   figletFont,
   model,
   verbose,
-  colorToneMap
+  colorToneMap,
+  combinedTones,
+  category,
+  userPrompt,
+  minRating,
+  displayStyle,
+  audioFile,
+  enableNotifications,
+  interactive
 } = config;
+const args = process.argv.slice(2);
+const interactiveMode = interactive || args.includes('--interactive');
 const interval = fetchInterval;
+const baseTone = combinedTones[0] || tone;
+const combinedTone = combinedTones.join('+');
 
 // ログパスの初期化
-const { logPath, echoesPath } = initializeLogPaths(__dirname, tone, language);
+const { logPath, echoesPath } = initializeLogPaths(__dirname, baseTone, language);
 
 // ログローテーションとクリーンアップ
 rotateLogIfNeeded(logPath);
 cleanOldLogs(path.join(__dirname, 'echoes'));
 
-const lolcatArgs = colorToneMap[tone] || '';
+const lolcatArgs = colorToneMap[baseTone] || '';
 
 // Load language resources
 const locales = {
@@ -58,7 +74,7 @@ const allPatterns = Object.fromEntries(
 
 function createBatchPrompt(count) {
   locale = getLocale(language);
-  return locale.createBatchPrompt(tone, count);
+  return locale.createBatchPrompt(combinedTone, count, category);
 }
 
 // プログラム終了時にカーソルを確実に表示する
@@ -108,11 +124,13 @@ async function mainLoop() {
       createBatchPrompt, 
       allPatterns, 
       language, 
-      tone, 
-      logPath, 
-      echoesPath, 
+      combinedTone,
+      logPath,
+      echoesPath,
       Math.min(quoteCount, 10),
-      verbose
+      verbose,
+      userPrompt,
+      category
     );
     mainTimer.mark('名言生成完了');
     
@@ -126,9 +144,20 @@ async function mainLoop() {
       readline.clearLine(process.stdout, 0);
     }
     
+    const filteredQuotes = filterByRating(allQuotes, minRating);
     verboseLog('名言表示ループを開始', verbose);
     // 名言を美的レイアウトで表示するループ
-    await displayQuoteLoop(allQuotes, typeSpeed, displayTime, fadeSteps, fadeDelay, interval, figletFont, tone);
+    await displayQuoteLoop(filteredQuotes.length ? filteredQuotes : allQuotes, typeSpeed, displayTime, fadeSteps, fadeDelay, interval, figletFont, baseTone, displayStyle, async (q) => {
+      if (enableNotifications) {
+        sendNotification(q[0]);
+      }
+      if (audioFile) {
+        playSound(audioFile);
+      }
+      if (interactiveMode) {
+        await promptForActions(q);
+      }
+    });
     
     mainTimer.end();
     

@@ -15,7 +15,7 @@ Remarques:
 - N'utilisez pas de guillemets pour les citations.
 - Séparez toujours chaque citation par "---".`,
 
-  createBatchPrompt: (tone, count) => `Générez ${count} citations et informations sur les personnages dans une atmosphère correspondant au tone: ${tone}, en suivant le format de sortie ci-dessus.
+  createBatchPrompt: (tone, count, category = '') => `Générez ${count} citations et informations sur les personnages dans une atmosphère correspondant au tone: ${tone}${category ? ` sur le thème ${category}` : ''}, en suivant le format de sortie ci-dessus.
 Assurez-vous de séparer chaque citation par "---".
 Veuillez produire en français.`,
 
