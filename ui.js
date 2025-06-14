@@ -1,6 +1,17 @@
 const readline = require('readline');
 const isFullwidth = require('is-fullwidth-code-point').default;
 
+// Clear a line with extra compatibility handling for terminals like iTerm2
+function clearLineSafe(stream, y) {
+  readline.cursorTo(stream, 0, y);
+  const term = process.env.TERM_PROGRAM || '';
+  if (term.toLowerCase().includes('iterm')) {
+    stream.write('\x1b[2K');
+  } else {
+    readline.clearLine(stream, 0);
+  }
+}
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -12,8 +23,7 @@ async function showDotAnimation(topOffset = 9, maxDots = 30, frameDelay = 150) {
 
   const animationLoop = async () => {
     while (dots < maxDots && shouldContinue) {
-      readline.cursorTo(process.stdout, 0, line);
-      readline.clearLine(process.stdout, 0);
+      clearLineSafe(process.stdout, line);
 
       let dotString = 'Generating wisdom';
       for (let i = 0; i < dots % 4; i++) {
@@ -26,8 +36,7 @@ async function showDotAnimation(topOffset = 9, maxDots = 30, frameDelay = 150) {
       await sleep(frameDelay);
     }
 
-    readline.cursorTo(process.stdout, 0, line);
-    readline.clearLine(process.stdout, 0);
+    clearLineSafe(process.stdout, line);
   };
 
   animationLoop();
@@ -85,8 +94,7 @@ function showLoadingAnimation(topOffset = 9, frameDelay = 150, tone = 'epic') {
   };
 
   const clearLoading = () => {
-    readline.cursorTo(process.stdout, 0, line);
-    readline.clearLine(process.stdout, 0);
+    clearLineSafe(process.stdout, line);
   };
 
   intervalId = setInterval(() => {
@@ -127,8 +135,7 @@ async function typeOut(lines, delay = 40, topOffset = 9, tone = 'epic') {
   hideCursor();
 
   for (let i = 0; i < lines.length + 1; i++) {
-    readline.cursorTo(process.stdout, 0, topOffset + i);
-    readline.clearLine(process.stdout, 0);
+    clearLineSafe(process.stdout, topOffset + i);
   }
 
   // toneに応じたタイプライターエフェクト
@@ -317,8 +324,7 @@ async function fadeOutFullwidth(lines, topOffset = 9, steps = 6, stepDelay = 120
 
   // 最終クリーンアップ
   for (let i = 0; i < lines.length + 1; i++) {
-    readline.cursorTo(process.stdout, 0, topOffset + i);
-    readline.clearLine(process.stdout, 0);
+    clearLineSafe(process.stdout, topOffset + i);
   }
 }
 
@@ -368,8 +374,7 @@ async function cyberpunkFadeEffect(lines, topOffset, steps, stepDelay) {
         }
         return { text: char, width: isWide ? 2 : 1 };
       });
-      readline.cursorTo(process.stdout, 0, topOffset + i);
-      readline.clearLine(process.stdout, 0);
+      clearLineSafe(process.stdout, topOffset + i);
       process.stdout.write(fadedLine.map(seg => seg.text).join(''));
     }
     await sleep(stepDelay * 0.8); // サイバーパンクは速め
@@ -389,8 +394,7 @@ async function zenFadeEffect(lines, topOffset, steps, stepDelay) {
         const replacement = fade ? (isWide ? '　' : ' ') : char;
         return { text: replacement, width: isWide ? 2 : 1 };
       });
-      readline.cursorTo(process.stdout, 0, topOffset + i);
-      readline.clearLine(process.stdout, 0);
+      clearLineSafe(process.stdout, topOffset + i);
       process.stdout.write(fadedLine.map(seg => seg.text).join(''));
     }
     await sleep(stepDelay * 1.5); // 禅は遅め
@@ -413,8 +417,7 @@ async function epicFadeEffect(lines, topOffset, steps, stepDelay) {
         const replacement = fade ? (isWide ? '　' : ' ') : char;
         return { text: replacement, width: isWide ? 2 : 1 };
       });
-      readline.cursorTo(process.stdout, 0, topOffset + i);
-      readline.clearLine(process.stdout, 0);
+      clearLineSafe(process.stdout, topOffset + i);
       process.stdout.write(fadedLine.map(seg => seg.text).join(''));
     }
     await sleep(stepDelay);
@@ -432,8 +435,7 @@ async function mellowFadeEffect(lines, topOffset, steps, stepDelay) {
         const replacement = fade ? (isWide ? '　' : ' ') : char;
         return { text: replacement, width: isWide ? 2 : 1 };
       });
-      readline.cursorTo(process.stdout, 0, topOffset + i);
-      readline.clearLine(process.stdout, 0);
+      clearLineSafe(process.stdout, topOffset + i);
       process.stdout.write(fadedLine.map(seg => seg.text).join(''));
     }
     await sleep(stepDelay * 1.3);
@@ -445,8 +447,7 @@ async function retroFadeEffect(lines, topOffset, steps, stepDelay) {
   // 行ごとに順番に消去
   for (let i = 0; i < lines.length; i++) {
     await sleep(stepDelay * 2);
-    readline.cursorTo(process.stdout, 0, topOffset + i);
-    readline.clearLine(process.stdout, 0);
+    clearLineSafe(process.stdout, topOffset + i);
   }
 }
 
@@ -456,8 +457,7 @@ async function neonFadeEffect(lines, topOffset, steps, stepDelay) {
   for (let blink = 0; blink < 3; blink++) {
     // 消す
     for (let i = 0; i < lines.length; i++) {
-      readline.cursorTo(process.stdout, 0, topOffset + i);
-      readline.clearLine(process.stdout, 0);
+      clearLineSafe(process.stdout, topOffset + i);
     }
     await sleep(stepDelay * 0.5);
     
@@ -471,8 +471,7 @@ async function neonFadeEffect(lines, topOffset, steps, stepDelay) {
   
   // 最終消去
   for (let i = 0; i < lines.length; i++) {
-    readline.cursorTo(process.stdout, 0, topOffset + i);
-    readline.clearLine(process.stdout, 0);
+    clearLineSafe(process.stdout, topOffset + i);
   }
 }
 
@@ -487,8 +486,7 @@ async function standardFadeEffect(lines, topOffset, steps, stepDelay) {
         const replacement = fade ? (isWide ? '　' : ' ') : char;
         return { text: replacement, width: isWide ? 2 : 1 };
       });
-      readline.cursorTo(process.stdout, 0, topOffset + i);
-      readline.clearLine(process.stdout, 0);
+      clearLineSafe(process.stdout, topOffset + i);
       process.stdout.write(fadedLine.map(seg => seg.text).join(''));
     }
     await sleep(stepDelay);
@@ -502,5 +500,6 @@ module.exports = {
   showCursor,
   showLoadingAnimation,
   typeOut,
-  fadeOutFullwidth
+  fadeOutFullwidth,
+  _testInternals: { clearLineSafe }
 };
