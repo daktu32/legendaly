@@ -15,7 +15,7 @@ Notes:
 - Do not use quotation marks for quotes.
 - Always separate each quote with "---".`,
 
-  createBatchPrompt: (tone, count) => `Please generate ${count} quotes and character information in the atmosphere matching tone: ${tone}, following the output format above.
+  createBatchPrompt: (tone, count, category = '') => `Please generate ${count} quotes and character information in the atmosphere matching tone: ${tone}${category ? ` about ${category}` : ''}, following the output format above.
 Be sure to separate each quote with "---".
 Please output in English.`,
 

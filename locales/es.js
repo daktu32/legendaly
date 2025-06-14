@@ -15,7 +15,7 @@ Notas:
 - No use comillas para las citas.
 - Separe siempre cada cita con "---".`,
 
-  createBatchPrompt: (tone, count) => `Genere ${count} citas e información de personajes en una atmósfera que coincida con tone: ${tone}, siguiendo el formato de salida anterior.
+  createBatchPrompt: (tone, count, category = '') => `Genere ${count} citas e información de personajes en una atmósfera que coincida con tone: ${tone}${category ? ` sobre ${category}` : ''}, siguiendo el formato de salida anterior.
 Asegúrese de separar cada cita con "---".
 Por favor, produzca en español.`,
 

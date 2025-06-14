@@ -103,5 +103,13 @@ module.exports = {
     'MODEL'
   ),
   verbose: process.env.VERBOSE === 'true' || process.env.VERBOSE === '1',
-  colorToneMap
+  colorToneMap,
+  combinedTones: (process.env.TONES || process.env.TONE || 'epic').split(',').map(t => t.trim()).filter(Boolean),
+  category: process.env.CATEGORY || '',
+  userPrompt: process.env.USER_PROMPT || '',
+  minRating: validateNumber(process.env.MIN_RATING || 0, 0, 5, 0, 'MIN_RATING'),
+  displayStyle: process.env.DISPLAY_STYLE || 'standard',
+  audioFile: process.env.AUDIO_FILE || '',
+  enableNotifications: process.env.NOTIFY === 'true' || process.env.NOTIFY === '1',
+  interactive: process.env.INTERACTIVE === 'true' || process.env.INTERACTIVE === '1'
 };

@@ -9,7 +9,7 @@ module.exports = {
 
 実在人物・作品は使用禁止。各名言は"---"で区切る。`,
 
-  createBatchPrompt: (tone, count) => `tone: ${tone}で${count}個の日本語名言を上記形式で生成。各名言を"---"で区切る。`,
+  createBatchPrompt: (tone, count, category = '') => `tone: ${tone}で${count}個の${category || '日本語'}名言を上記形式で生成。各名言を"---"で区切る。`,
 
   patterns: {
     quote: /名言\s*:\s*(.*?)(?:\n|$)/m,

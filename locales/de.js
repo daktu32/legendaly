@@ -15,7 +15,7 @@ Hinweise:
 - Verwenden Sie keine Anführungszeichen für Zitate.
 - Trennen Sie jedes Zitat immer mit "---".`,
 
-  createBatchPrompt: (tone, count) => `Bitte generieren Sie ${count} Zitate und Charakterinformationen in einer Atmosphäre, die zu tone: ${tone} passt, gemäß dem obigen Ausgabeformat.
+  createBatchPrompt: (tone, count, category = '') => `Bitte generieren Sie ${count} Zitate und Charakterinformationen in einer Atmosphäre, die zu tone: ${tone}${category ? ` zum Thema ${category}` : ''} passt, gemäß dem obigen Ausgabeformat.
 Achten Sie darauf, jedes Zitat mit "---" zu trennen.
 Bitte in Deutsch ausgeben.`,
 

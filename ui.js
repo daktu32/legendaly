@@ -54,6 +54,17 @@ function showCursor() {
   process.stderr.write('\x1B[?25h');
 }
 
+function playSound(file) {
+  if (!file) return;
+  const { spawn } = require('child_process');
+  const player = process.platform === 'darwin' ? 'afplay' : 'aplay';
+  try {
+    spawn(player, [file], { stdio: 'ignore', detached: true }).unref();
+  } catch (e) {
+    // ignore errors when audio playback is unavailable
+  }
+}
+
 function showLoadingAnimation(topOffset = 9, frameDelay = 150, tone = 'epic') {
   const line = topOffset;
   let frameIndex = 0;
@@ -499,6 +510,7 @@ module.exports = {
   hideCursor,
   showCursor,
   showLoadingAnimation,
+  playSound,
   typeOut,
   fadeOutFullwidth,
   _testInternals: { clearLineSafe }

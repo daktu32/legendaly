@@ -15,7 +15,7 @@ module.exports = {
 - 명언에 따옴표를 사용하지 마세요.
 - 각 명언 뒤에 반드시 "---"로 구분해 주세요.`,
 
-  createBatchPrompt: (tone, count) => `tone: ${tone}에 맞는 분위기로, 위의 출력 형식에 따라 ${count}개의 명언과 캐릭터 정보를 생성해 주세요.
+  createBatchPrompt: (tone, count, category = '') => `tone: ${tone}에 맞는 분위기로, 위의 출력 형식에 따라 ${count}개의${category ? ` ${category} 관련` : ''} 명언과 캐릭터 정보를 생성해 주세요.
 각 명언 뒤에 반드시 "---"를 넣어 구분해 주세요.
 한국어로 출력해 주세요.`,
 
