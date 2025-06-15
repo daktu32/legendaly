@@ -15,7 +15,7 @@ const { initializeLogPaths, rotateLogIfNeeded, cleanOldLogs, Timer, verboseLog }
 const { setupSignalHandlers, displayHeader, displayQuoteLoop, showLoadingAnimation, calculateLayout } = require('./lib/animation');
 const { promptForActions } = require('./lib/interactive');
 const { filterByRating } = require('./lib/ratings');
-const { sendNotification } = require('./lib/notify');
+const { sendNotification, notifyCompletion, notifyError } = require('./lib/notify');
 
 // 設定の取得
 const {
@@ -38,6 +38,9 @@ const {
   displayStyle,
   audioFile,
   enableNotifications,
+  visualNotifications,
+  disableSound,
+  flashScreen,
   interactive
 } = config;
 const args = process.argv.slice(2);
@@ -106,8 +109,8 @@ async function mainLoop() {
   const layout = calculateLayout();
   mainTimer.mark('レイアウト計算完了');
   
-  // ヘッダーを表示
-  displayHeader(figletFont, lolcatArgs);
+  // ヘッダーを表示（ウェイブ演出付き）
+  await displayHeader(figletFont, lolcatArgs, true);
   mainTimer.mark('ヘッダー表示完了');
   
   // ローディングアニメーションを開始（動的位置計算）
@@ -147,10 +150,23 @@ async function mainLoop() {
     const filteredQuotes = filterByRating(allQuotes, minRating);
     verboseLog('名言表示ループを開始', verbose);
     // 名言を美的レイアウトで表示するループ
-    await displayQuoteLoop(filteredQuotes.length ? filteredQuotes : allQuotes, typeSpeed, displayTime, fadeSteps, fadeDelay, interval, figletFont, baseTone, displayStyle, async (q) => {
-      if (enableNotifications) {
-        sendNotification(q[0]);
-      }
+    const quotesToDisplay = filteredQuotes.length ? filteredQuotes : allQuotes;
+    
+    // 名言生成完了を通知
+    if (enableNotifications && quotesToDisplay.length > 0) {
+      const firstQuote = quotesToDisplay[0];
+      notifyCompletion(firstQuote[0], {
+        character: firstQuote[1],
+        work: firstQuote[2],
+        count: quotesToDisplay.length
+      }, {
+        visualNotification: visualNotifications,
+        disableSound: disableSound,
+        flashScreen: flashScreen
+      });
+    }
+    
+    await displayQuoteLoop(quotesToDisplay, typeSpeed, displayTime, fadeSteps, fadeDelay, interval, figletFont, baseTone, displayStyle, async (q) => {
       if (audioFile) {
         playSound(audioFile);
       }
@@ -163,6 +179,14 @@ async function mainLoop() {
     
   } catch (error) {
     console.error('エラーが発生しました:', error);
+    // エラーを通知
+    if (enableNotifications) {
+      notifyError(error.message || 'APIコールに失敗しました', {
+        visualNotification: visualNotifications,
+        disableSound: disableSound,
+        flashScreen: flashScreen
+      });
+    }
     // エラー発生時もローディングアニメーションを停止
     stopLoading();
     // エラー発生時はカーソルを表示

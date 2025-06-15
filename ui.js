@@ -1,5 +1,5 @@
 const readline = require('readline');
-const isFullwidth = require('is-fullwidth-code-point').default;
+const isFullwidth = require('is-fullwidth-code-point');
 
 // Clear a line with extra compatibility handling for terminals like iTerm2
 function clearLineSafe(stream, y) {

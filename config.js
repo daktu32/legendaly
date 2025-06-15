@@ -111,5 +111,8 @@ module.exports = {
   displayStyle: process.env.DISPLAY_STYLE || 'standard',
   audioFile: process.env.AUDIO_FILE || '',
   enableNotifications: process.env.NOTIFY === 'true' || process.env.NOTIFY === '1',
+  visualNotifications: process.env.VISUAL_NOTIFY === 'true' || process.env.VISUAL_NOTIFY === '1',
+  disableSound: process.env.DISABLE_SOUND === 'true' || process.env.DISABLE_SOUND === '1',
+  flashScreen: process.env.FLASH_SCREEN === 'true' || process.env.FLASH_SCREEN === '1',
   interactive: process.env.INTERACTIVE === 'true' || process.env.INTERACTIVE === '1'
 };
