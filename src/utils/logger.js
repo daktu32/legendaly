@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 // Verbose logging utility
 class Timer {
@@ -47,24 +48,46 @@ function formatDateAsCompactString(date) {
   return `${year}${month}${day}${hours}${minutes}${seconds}${milliseconds}`;
 }
 
-// ログディレクトリとファイルパスの初期化
-function initializeLogPaths(baseDir, tone, language) {
-  // echoesディレクトリが存在しない場合は作成
-  const echoesDir = path.join(baseDir, 'echoes');
-  if (!fs.existsSync(echoesDir)) {
-    fs.mkdirSync(echoesDir, { recursive: true });
+// ~/.legendalyディレクトリの初期化
+function ensureLegendaryDirectory() {
+  const legendaryDir = path.join(os.homedir(), '.legendaly');
+  const subDirs = ['logs', 'echoes', 'config', 'cache'];
+  
+  // メインディレクトリの作成
+  if (!fs.existsSync(legendaryDir)) {
+    fs.mkdirSync(legendaryDir, { recursive: true });
   }
   
-  // 現在の実行用のログファイル名を生成
+  // サブディレクトリの作成
+  subDirs.forEach(subDir => {
+    const dirPath = path.join(legendaryDir, subDir);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+  });
+  
+  return legendaryDir;
+}
+
+// ログディレクトリとファイルパスの初期化
+function initializeLogPaths(baseDir, tone, language) {
+  // ~/.legendalyディレクトリを初期化
+  const legendaryDir = ensureLegendaryDirectory();
+  
+  // 新しいパス構造
+  const logsDir = path.join(legendaryDir, 'logs');
+  const echoesDir = path.join(legendaryDir, 'echoes');
+  
+  // 現在の実行用のechoesファイル名を生成
   const now = new Date();
   const formattedTime = formatDateAsCompactString(now);
   const echoesFname = `${formattedTime}-${tone}-${language}.echoes`;
   const echoesPath = path.join(echoesDir, echoesFname);
   
-  // レガシーログパスも残しておく（後方互換性のため）
-  const logPath = path.join(baseDir, 'legendaly.log');
+  // ログファイルパス
+  const logPath = path.join(logsDir, 'legendaly.log');
   
-  return { logPath, echoesPath };
+  return { logPath, echoesPath, legendaryDir };
 }
 
 // ログファイルのサイズをチェックしてローテーション
@@ -109,6 +132,7 @@ module.exports = {
   initializeLogPaths,
   rotateLogIfNeeded,
   cleanOldLogs,
+  ensureLegendaryDirectory,
   Timer,
   verboseLog
 };

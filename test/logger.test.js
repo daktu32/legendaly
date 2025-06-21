@@ -2,7 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
-const { formatDateAsCompactString, initializeLogPaths } = require('../src/utils/logger');
+const os = require('os');
+const { formatDateAsCompactString, initializeLogPaths, ensureLegendaryDirectory } = require('../src/utils/logger');
 
 test('logger functions', async (t) => {
   await t.test('formatDateAsCompactString formats date correctly', () => {
@@ -14,42 +15,37 @@ test('logger functions', async (t) => {
     assert(formatted.startsWith('202401'));
   });
 
-  await t.test('initializeLogPaths creates directories and returns paths', () => {
-    const tempDir = path.join(__dirname, 'temp_logger_test');
+  await t.test('initializeLogPaths creates ~/.legendaly directories and returns paths', () => {
+    const { logPath, echoesPath, legendaryDir } = initializeLogPaths('dummy', 'epic', 'ja');
     
-    // テスト前にディレクトリが存在しないことを確認
-    if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true });
-    }
+    // ~/.legendalyディレクトリが作成されているか確認
+    const expectedLegendaryDir = path.join(os.homedir(), '.legendaly');
+    assert.strictEqual(legendaryDir, expectedLegendaryDir);
+    assert(fs.existsSync(legendaryDir));
     
-    const { logPath, echoesPath } = initializeLogPaths(tempDir, 'epic', 'ja');
-    
-    // echoesディレクトリが作成されているか確認
-    assert(fs.existsSync(path.join(tempDir, 'echoes')));
+    // サブディレクトリが作成されているか確認
+    assert(fs.existsSync(path.join(legendaryDir, 'logs')));
+    assert(fs.existsSync(path.join(legendaryDir, 'echoes')));
+    assert(fs.existsSync(path.join(legendaryDir, 'config')));
+    assert(fs.existsSync(path.join(legendaryDir, 'cache')));
     
     // パスが正しく設定されているか確認
-    assert.strictEqual(logPath, path.join(tempDir, 'legendaly.log'));
-    assert(echoesPath.startsWith(path.join(tempDir, 'echoes')));
+    assert.strictEqual(logPath, path.join(legendaryDir, 'logs', 'legendaly.log'));
+    assert(echoesPath.startsWith(path.join(legendaryDir, 'echoes')));
     assert(echoesPath.includes('-epic-ja.echoes'));
-    
-    // クリーンアップ
-    fs.rmSync(tempDir, { recursive: true });
   });
 
-  await t.test('initializeLogPaths works with existing directories', () => {
-    const tempDir = path.join(__dirname, 'temp_logger_test2');
-    const echoesDir = path.join(tempDir, 'echoes');
+  await t.test('ensureLegendaryDirectory creates all required subdirectories', () => {
+    const legendaryDir = ensureLegendaryDirectory();
     
-    // ディレクトリを事前に作成
-    fs.mkdirSync(echoesDir, { recursive: true });
+    // 期待されるパス
+    const expectedDir = path.join(os.homedir(), '.legendaly');
+    assert.strictEqual(legendaryDir, expectedDir);
     
-    const { logPath, echoesPath } = initializeLogPaths(tempDir, 'zen', 'en');
-    
-    // パスが正しく設定されているか確認
-    assert.strictEqual(logPath, path.join(tempDir, 'legendaly.log'));
-    assert(echoesPath.includes('-zen-en.echoes'));
-    
-    // クリーンアップ
-    fs.rmSync(tempDir, { recursive: true });
+    // 全てのサブディレクトリが存在するか確認
+    const requiredSubDirs = ['logs', 'echoes', 'config', 'cache'];
+    requiredSubDirs.forEach(subDir => {
+      assert(fs.existsSync(path.join(legendaryDir, subDir)), `${subDir} directory should exist`);
+    });
   });
 });

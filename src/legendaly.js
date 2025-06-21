@@ -63,11 +63,11 @@ const baseTone = combinedTones[0] || tone;
 const combinedTone = combinedTones.join('+');
 
 // ログパスの初期化
-const { logPath, echoesPath } = initializeLogPaths(__dirname, baseTone, language);
+const { logPath, echoesPath, legendaryDir } = initializeLogPaths(__dirname, baseTone, language);
 
 // ログローテーションとクリーンアップ
 rotateLogIfNeeded(logPath);
-cleanOldLogs(path.join(__dirname, '../.temp/echoes'));
+cleanOldLogs(path.join(legendaryDir, 'echoes'));
 
 const lolcatArgs = colorToneMap[baseTone] || '';
 

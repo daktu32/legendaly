@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const os = require('os');
 const { addRating } = require('./ratings');
 
-const favoritesFile = path.join(__dirname, '../../favorites.json');
+const favoritesFile = path.join(os.homedir(), '.legendaly', 'config', 'favorites.json');
 
 function loadFavorites() {
   try {

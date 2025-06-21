@@ -6,12 +6,23 @@ const os = require('os');
 
 console.log('\n🎉 Thanks for installing Legendaly!\n');
 
-// 設定ディレクトリの作成
-const configDir = path.join(os.homedir(), '.legendaly');
-if (!fs.existsSync(configDir)) {
-  fs.mkdirSync(configDir, { recursive: true });
-  console.log(`✓ Created config directory: ${configDir}`);
+// ~/.legendalyディレクトリの作成
+const legendaryDir = path.join(os.homedir(), '.legendaly');
+const subDirs = ['logs', 'echoes', 'config', 'cache'];
+
+if (!fs.existsSync(legendaryDir)) {
+  fs.mkdirSync(legendaryDir, { recursive: true });
+  console.log(`✓ Created Legendaly directory: ${legendaryDir}`);
 }
+
+// サブディレクトリの作成
+subDirs.forEach(subDir => {
+  const dirPath = path.join(legendaryDir, subDir);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    console.log(`✓ Created subdirectory: ${subDir}/`);
+  }
+});
 
 // 環境変数の例を表示
 console.log('\n📝 To use Legendaly, you need to set up your OpenAI API key:');
