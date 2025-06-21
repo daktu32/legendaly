@@ -25,18 +25,68 @@
 
 ## インストール
 
+### グローバルインストール（推奨）
+
 ```bash
+# npmからグローバルインストール
+npm install -g legendaly
+
+# またはソースからインストール
+git clone https://github.com/yourusername/legendaly.git
+cd legendaly
+npm install
+npm link
+```
+
+### ローカルインストール
+
+```bash
+# クローンしてインストール
+git clone https://github.com/yourusername/legendaly.git
+cd legendaly
 npm install
 ```
 
-OpenAI API キーが必要です。デフォルトでは `~/.config/common/openaiClients.js` のヘルパーモジュールから設定済みクライアントを読み込みます。別の場所に置く場合は `OPENAI_CLIENT_PATH` 環境変数でパスを指定してください。
+### 必要要件
+
+1. **Node.js**: バージョン 16.0.0 以上
+2. **OpenAI API キー**: 名言生成に必須
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+3. **オプション依存関係**（ビジュアル効果の向上）:
+   - **figlet**: ASCIIアートテキスト表示
+     ```bash
+     # macOS
+     brew install figlet
+     
+     # Linux
+     sudo apt-get install figlet
+     ```
+   - **lolcat**: 虹色テキスト
+     ```bash
+     gem install lolcat
+     ```
 
 ## 使い方
 
 ![Demo](assets/demo.gif)
 
+### グローバルインストールの場合
 ```bash
-node legendaly.js
+# 名言を生成
+legendaly
+
+# ヘルプを表示
+legendaly --help
+
+# インタラクティブモード
+legendaly --interactive
+```
+
+### ローカルインストールの場合
+```bash
+node src/legendaly.js
 ```
 
 `.env` ファイルを作成して下記の環境変数を設定するとカスタマイズできます。

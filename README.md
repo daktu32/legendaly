@@ -26,22 +26,68 @@ It types out beautiful quotes like a sage, then fades them into mist, one by one
 
 ## Installation
 
+### Global Installation (Recommended)
+
 ```bash
+# Install globally from npm
+npm install -g legendaly
+
+# Or install from source
+git clone https://github.com/yourusername/legendaly.git
+cd legendaly
+npm install
+npm link
+```
+
+### Local Installation
+
+```bash
+# Clone and install
+git clone https://github.com/yourusername/legendaly.git
+cd legendaly
 npm install
 ```
 
-You also need an OpenAI API key. By default the program loads a helper module
-from `~/.config/common/openaiClients.js` that exports a configured OpenAI
-client.  If you keep this helper in another location, set the
-`OPENAI_CLIENT_PATH` environment variable to point to it.  A typical helper uses
-`dotenv` to load a `.env` file with your credentials.
+### Requirements
+
+1. **Node.js**: Version 16.0.0 or higher
+2. **OpenAI API Key**: Required for quote generation
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+3. **Optional Dependencies** for enhanced visual effects:
+   - **figlet**: ASCII art text rendering
+     ```bash
+     # macOS
+     brew install figlet
+     
+     # Linux
+     sudo apt-get install figlet
+     ```
+   - **lolcat**: Rainbow text coloring
+     ```bash
+     gem install lolcat
+     ```
 
 ## Usage
 
 ![Demo](assets/demo.gif)
 
+### Global Installation
 ```bash
-node legendaly.js
+# Generate a legendary quote
+legendaly
+
+# Show help
+legendaly --help
+
+# Interactive mode
+legendaly --interactive
+```
+
+### Local Installation
+```bash
+node src/legendaly.js
 ```
 
 Create a `.env` file to customize behavior with the following environment variables:

@@ -1,15 +1,50 @@
 {
   "name": "legendaly",
   "version": "1.0.0",
+  "description": "AI-powered inspirational quote generator for your terminal with beautiful typewriter animations",
+  "main": "src/legendaly.js",
   "bin": {
     "legendaly": "./src/legendaly.js"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "postinstall": "node scripts/postinstall.js",
+    "legendaly": "node src/legendaly.js"
+  },
+  "keywords": [
+    "cli",
+    "terminal",
+    "quotes",
+    "ai",
+    "openai",
+    "gpt",
+    "animation",
+    "typewriter",
+    "inspiration",
+    "motivation"
+  ],
+  "author": "Codex",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/legendaly.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/legendaly/issues"
+  },
+  "homepage": "https://github.com/yourusername/legendaly#readme",
+  "engines": {
+    "node": ">=16.0.0"
   },
   "dependencies": {
     "dotenv": "^16.5.0",
     "is-fullwidth-code-point": "^3.0.0",
     "openai": "^4.103.0"
-  }
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "preferGlobal": true
 }

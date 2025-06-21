@@ -1,5 +1,18 @@
 #!/usr/bin/env node
 
+// 初期エラーチェック
+function checkDependencies() {
+  try {
+    require('openai');
+  } catch (e) {
+    console.error('\n❌ Missing required dependencies.');
+    console.error('Please run: npm install\n');
+    process.exit(1);
+  }
+}
+
+checkDependencies();
+
 require('dotenv').config();
 const path = require('path');
 const readline = require('readline');
@@ -88,9 +101,52 @@ process.on('exit', () => {
 // エラー発生時にもカーソルを表示する
 process.on('uncaughtException', (err) => {
   showCursor();
-  console.error('エラーが発生しました:', err);
+  console.error('\n❌ エラーが発生しました:', err.message || err);
+  if (err.code === 'ENOENT' && err.path && err.path.includes('figlet')) {
+    console.error('\n💡 figletが見つかりません。インストールしてください:');
+    console.error('   macOS: brew install figlet');
+    console.error('   Linux: sudo apt-get install figlet\n');
+  }
+  if (err.message && err.message.includes('lolcat')) {
+    console.error('\n💡 lolcatが見つかりません。インストールしてください:');
+    console.error('   gem install lolcat\n');
+  }
   process.exit(1);
 });
+
+// ヘルプ表示
+if (args.includes('-h') || args.includes('--help')) {
+  console.log(`
+Legendaly - AI-powered inspirational quote generator
+
+Usage: legendaly [options]
+
+Options:
+  -h, --help        Show this help message
+  --interactive     Enable interactive mode
+  --version         Show version
+
+Environment variables:
+  OPENAI_API_KEY    Required: Your OpenAI API key
+  TONE              Quote tone (epic, zen, cyberpunk, etc.)
+  LANGUAGE          Output language (ja, en, zh, ko, fr, es, de)
+  MODEL             OpenAI model (gpt-4o-mini, gpt-4-turbo, etc.)
+
+Examples:
+  legendaly                    # Generate a quote
+  legendaly --interactive      # Interactive mode
+  TONE=zen legendaly          # Generate a zen quote
+  LANGUAGE=en legendaly       # Generate English quote
+`);
+  process.exit(0);
+}
+
+// バージョン表示
+if (args.includes('--version')) {
+  const pkg = require('../package.json');
+  console.log(`legendaly v${pkg.version}`);
+  process.exit(0);
+}
 
 // プログラム開始時に一度だけカーソルを確実に非表示にする
 hideCursor();
