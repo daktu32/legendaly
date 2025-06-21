@@ -46,5 +46,8 @@
     "linux",
     "win32"
   ],
-  "preferGlobal": true
+  "preferGlobal": true,
+  "optionalDependencies": {
+    "comment": "tte (terminal-text-effects) is required for storm mode: pip install terminal-text-effects"
+  }
 }

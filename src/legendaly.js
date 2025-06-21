@@ -124,6 +124,8 @@ Usage: legendaly [options]
 Options:
   -h, --help        Show this help message
   --interactive     Enable interactive mode
+  --storm           Storm mode: display quotes with terminal effects
+  --storm-only      Storm mode with historical quotes only
   --version         Show version
 
 Environment variables:
@@ -146,6 +148,57 @@ if (args.includes('--version')) {
   const pkg = require('../package.json');
   console.log(`legendaly v${pkg.version}`);
   process.exit(0);
+}
+
+// Storm モード処理
+if (args.includes('--storm') || args.includes('--storm-only')) {
+  const { standaloneStormMode, stormModeWithQuotes } = require('./features/storm');
+  
+  async function runStorm() {
+    try {
+      if (args.includes('--storm-only')) {
+        // 履歴から読み込むモード
+        await standaloneStormMode({
+          interval: displayTime || 5000,
+          continuous: true,
+          randomOrder: true
+        });
+      } else {
+        // 通常の名言生成後にstormモードへ
+        console.log('🌪️  Generating new quotes before entering Storm Mode...\n');
+        const allQuotes = await generateBatchQuotes(
+          openai, 
+          model, 
+          role, 
+          createBatchPrompt, 
+          allPatterns, 
+          language, 
+          combinedTone,
+          logPath,
+          echoesPath,
+          Math.min(quoteCount, 10),
+          verbose,
+          userPrompt,
+          category
+        );
+        
+        await stormModeWithQuotes(allQuotes, {
+          interval: displayTime || 5000,
+          includeHistory: true,
+          continuous: true,
+          randomOrder: true
+        });
+      }
+    } catch (error) {
+      showCursor();
+      console.error('\n❌ Storm mode error:', error.message);
+      process.exit(1);
+    }
+  }
+  
+  hideCursor();
+  runStorm();
+  return; // Exit early, don't run main loop
 }
 
 // プログラム開始時に一度だけカーソルを確実に非表示にする
