@@ -1,6 +1,6 @@
 const readline = require('readline');
 const { execSync } = require('child_process');
-const { sleep, showLoadingAnimation, typeOut, fadeOutFullwidth } = require('../ui');
+const { sleep, showLoadingAnimation, typeOut, fadeOutFullwidth } = require('../ui/ui');
 
 // Ctrl+C などでの中断時の処理をセットアップ
 function setupSignalHandlers(showCursor) {

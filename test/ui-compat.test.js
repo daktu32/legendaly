@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const { PassThrough } = require('stream');
 const readline = require('readline');
-const ui = require('../ui');
+const ui = require('../src/ui/ui');
 
 function runWithEnv(env, fn) {
   const prev = process.env.TERM_PROGRAM;

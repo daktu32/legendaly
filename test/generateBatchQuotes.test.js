@@ -2,13 +2,13 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const locales = {
-  ja: require('../locales/ja'),
-  en: require('../locales/en'),
-  zh: require('../locales/zh'),
-  ko: require('../locales/ko'),
-  fr: require('../locales/fr'),
-  es: require('../locales/es'),
-  de: require('../locales/de')
+  ja: require('../src/locales/ja'),
+  en: require('../src/locales/en'),
+  zh: require('../src/locales/zh'),
+  ko: require('../src/locales/ko'),
+  fr: require('../src/locales/fr'),
+  es: require('../src/locales/es'),
+  de: require('../src/locales/de')
 };
 
 const allPatterns = Object.fromEntries(

@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
+require('dotenv').config();
 const path = require('path');
 const readline = require('readline');
-require('dotenv').config();
 const {
   hideCursor,
   showCursor,
   playSound
-} = require('./ui');
-const config = require('./config');
-const openai = require(config.openaiClientPath);
-const { generateBatchQuotes } = require('./lib/quotes');
-const { initializeLogPaths, rotateLogIfNeeded, cleanOldLogs, Timer, verboseLog } = require('./lib/logger');
-const { setupSignalHandlers, displayHeader, displayQuoteLoop, showLoadingAnimation, calculateLayout } = require('./lib/animation');
-const { promptForActions } = require('./lib/interactive');
-const { filterByRating } = require('./lib/ratings');
-const { sendNotification, notifyCompletion, notifyError } = require('./lib/notify');
+} = require('./ui/ui');
+const config = require('./core/config');
+const openai = require('./utils/openaiClients.js');
+const { generateBatchQuotes } = require('./core/quotes');
+const { initializeLogPaths, rotateLogIfNeeded, cleanOldLogs, Timer, verboseLog } = require('./utils/logger');
+const { setupSignalHandlers, displayHeader, displayQuoteLoop, showLoadingAnimation, calculateLayout } = require('./core/animation');
+const { promptForActions } = require('./features/interactive');
+const { filterByRating } = require('./features/ratings');
+const { sendNotification, notifyCompletion, notifyError } = require('./features/notify');
 
 // 設定の取得
 const {
@@ -54,7 +54,7 @@ const { logPath, echoesPath } = initializeLogPaths(__dirname, baseTone, language
 
 // ログローテーションとクリーンアップ
 rotateLogIfNeeded(logPath);
-cleanOldLogs(path.join(__dirname, 'echoes'));
+cleanOldLogs(path.join(__dirname, '../.temp/echoes'));
 
 const lolcatArgs = colorToneMap[baseTone] || '';
 

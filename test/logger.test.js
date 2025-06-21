@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
-const { formatDateAsCompactString, initializeLogPaths } = require('../lib/logger');
+const { formatDateAsCompactString, initializeLogPaths } = require('../src/utils/logger');
 
 test('logger functions', async (t) => {
   await t.test('formatDateAsCompactString formats date correctly', () => {

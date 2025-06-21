@@ -2,7 +2,7 @@
   "name": "legendaly",
   "version": "1.0.0",
   "bin": {
-    "legendaly": "./legendaly.js",
+    "legendaly": "./src/legendaly.js",
     "legendaly-server": "./server.js"
   },
   "scripts": {

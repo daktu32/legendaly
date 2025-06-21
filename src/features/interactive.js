@@ -3,7 +3,7 @@ const path = require('path');
 const readline = require('readline');
 const { addRating } = require('./ratings');
 
-const favoritesFile = path.join(__dirname, '..', 'favorites.json');
+const favoritesFile = path.join(__dirname, '../../favorites.json');
 
 function loadFavorites() {
   try {

@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
-const { generateBatchQuotes } = require('../lib/quotes');
+const { generateBatchQuotes } = require('../src/core/quotes');
 
 // モックのOpenAIクライアント
 function createMockOpenAI(response, shouldFail = false, errorType = null) {

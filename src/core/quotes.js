@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { sleep } = require('../ui');
-const { Timer, verboseLog } = require('./logger');
+const { sleep } = require('../ui/ui');
+const { Timer, verboseLog } = require('../utils/logger');
 
 // 名言キャッシュ（メモリ上に最大300個まで保持）
 const quoteCache = new Map();

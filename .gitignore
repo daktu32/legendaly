@@ -1,3 +1,4 @@
 node_modules/*
-legendaly.log
-echoes/*
+.temp/*
+.env
+favorites.json

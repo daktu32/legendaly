@@ -14,7 +14,7 @@ test('config validation', async (t) => {
     };
     
     const child = spawn('node', ['-e', `
-      const config = require('./config');
+      const config = require('./src/core/config');
       console.log(JSON.stringify({
         fetchInterval: config.fetchInterval,
         quoteCount: config.quoteCount,
@@ -64,7 +64,7 @@ test('config validation', async (t) => {
     };
     
     const child = spawn('node', ['-e', `
-      const config = require('./config');
+      const config = require('./src/core/config');
       console.log(JSON.stringify({
         tone: config.tone,
         language: config.language,
@@ -110,7 +110,7 @@ test('config validation', async (t) => {
     };
     
     const child = spawn('node', ['-e', `
-      const config = require('./config');
+      const config = require('./src/core/config');
       const os = require('os');
       console.log(JSON.stringify({
         openaiClientPath: config.openaiClientPath,
