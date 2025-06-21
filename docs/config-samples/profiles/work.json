@@ -1,0 +1,62 @@
+{
+  "name": "Work Profile",
+  "description": "Professional and motivational quotes for workplace inspiration",
+  "version": "1.0.0",
+  
+  "settings": {
+    "core": {
+      "tone": "epic",
+      "language": "en",
+      "model": "gpt-4o-mini",
+      "category": "leadership,motivation,success",
+      "userPrompt": "Generate professional and inspiring quotes suitable for workplace motivation"
+    },
+    
+    "generation": {
+      "quoteCount": 15,
+      "fetchInterval": 2,
+      "minRating": 3
+    },
+    
+    "animation": {
+      "typeSpeed": 35,
+      "fadeSteps": 6,
+      "fadeDelay": 120,
+      "displayTime": 3000,
+      "displayStyle": "standard"
+    },
+    
+    "visual": {
+      "figletFont": "slant",
+      "theme": "minimalist"
+    },
+    
+    "notifications": {
+      "enabled": false,
+      "visual": false,
+      "disableSound": true,
+      "flashScreen": false
+    },
+    
+    "features": {
+      "interactive": false,
+      "verbose": false,
+      "autoSave": true
+    }
+  },
+  
+  "customCategories": [
+    "leadership",
+    "teamwork", 
+    "innovation",
+    "productivity",
+    "goal-setting",
+    "professional-growth"
+  ],
+  
+  "excludeCategories": [
+    "romance",
+    "fantasy",
+    "supernatural"
+  ]
+}

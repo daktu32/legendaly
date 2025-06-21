@@ -1,0 +1,63 @@
+{
+  "$schema": "https://github.com/yourusername/legendaly/settings.schema.json",
+  "version": "1.0.0",
+  "description": "Legendaly user settings - copy to ~/.legendaly/config/settings.json to customize",
+  
+  "_comment_core": "=== Core Settings ===",
+  "core": {
+    "tone": "epic",
+    "language": "ja",
+    "model": "gpt-4o-mini",
+    "category": "",
+    "userPrompt": ""
+  },
+  
+  "_comment_generation": "=== Quote Generation ===",
+  "generation": {
+    "quoteCount": 25,
+    "fetchInterval": 1,
+    "minRating": 0
+  },
+  
+  "_comment_animation": "=== Animation & Display ===",
+  "animation": {
+    "typeSpeed": 40,
+    "fadeSteps": 8,
+    "fadeDelay": 100,
+    "displayTime": 2000,
+    "displayStyle": "standard"
+  },
+  
+  "_comment_visual": "=== Visual Effects ===",
+  "visual": {
+    "figletFont": "slant",
+    "enableColors": true,
+    "theme": "default"
+  },
+  
+  "_comment_notifications": "=== Notifications ===",
+  "notifications": {
+    "enabled": false,
+    "visual": false,
+    "disableSound": true,
+    "flashScreen": false
+  },
+  
+  "_comment_features": "=== Features ===",
+  "features": {
+    "interactive": false,
+    "verbose": false,
+    "autoSave": true
+  },
+  
+  "_comment_audio": "=== Audio (Optional) ===",
+  "audio": {
+    "audioFile": "",
+    "enableSounds": false
+  },
+  
+  "_comment_paths": "=== Paths ===",
+  "paths": {
+    "openaiClientPath": "~/.config/common/openaiClients.js"
+  }
+}

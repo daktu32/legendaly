@@ -1,0 +1,64 @@
+{
+  "name": "Personal Profile", 
+  "description": "Relaxing and introspective quotes for personal reflection",
+  "version": "1.0.0",
+  
+  "settings": {
+    "core": {
+      "tone": "zen",
+      "language": "ja",
+      "model": "gpt-4o-mini",
+      "category": "philosophy,wisdom,life",
+      "userPrompt": "Generate thoughtful quotes about life, wisdom, and personal growth"
+    },
+    
+    "generation": {
+      "quoteCount": 30,
+      "fetchInterval": 1,
+      "minRating": 2
+    },
+    
+    "animation": {
+      "typeSpeed": 50,
+      "fadeSteps": 12,
+      "fadeDelay": 150,
+      "displayTime": 4000,
+      "displayStyle": "detailed"
+    },
+    
+    "visual": {
+      "figletFont": "standard",
+      "theme": "forest"
+    },
+    
+    "notifications": {
+      "enabled": true,
+      "visual": true,
+      "disableSound": false,
+      "flashScreen": false
+    },
+    
+    "features": {
+      "interactive": true,
+      "verbose": false,
+      "autoSave": true
+    }
+  },
+  
+  "customCategories": [
+    "mindfulness",
+    "philosophy",
+    "wisdom",
+    "personal-growth",
+    "spirituality",
+    "meditation",
+    "nature"
+  ],
+  
+  "favoriteAuthors": [
+    "ブッダ",
+    "孔子",
+    "老子",
+    "ソクラテス"
+  ]
+}

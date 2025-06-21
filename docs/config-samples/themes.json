@@ -1,0 +1,103 @@
+{
+  "$schema": "https://github.com/yourusername/legendaly/themes.schema.json",
+  "version": "1.0.0",
+  "description": "Legendaly custom themes - copy to ~/.legendaly/config/themes.json to use",
+  
+  "_comment": "Custom theme definitions with color mappings and animation settings",
+  
+  "themes": {
+    "midnight": {
+      "name": "Midnight Blue",
+      "description": "Dark blue theme with silver accents",
+      "colorTone": "--freq=0.3 --spread=1.5",
+      "figletFont": "slant",
+      "typeSpeed": 35,
+      "fadeSteps": 12,
+      "primaryColor": "#1e3a8a",
+      "accentColor": "#c0c0c0"
+    },
+    
+    "sunset": {
+      "name": "Sunset Glow",
+      "description": "Warm orange and red gradient theme",
+      "colorTone": "--freq=0.6 --spread=2.0 --seed 7",
+      "figletFont": "big",
+      "typeSpeed": 50,
+      "fadeSteps": 10,
+      "primaryColor": "#ea580c",
+      "accentColor": "#fbbf24"
+    },
+    
+    "forest": {
+      "name": "Forest Whisper",
+      "description": "Green nature-inspired theme",
+      "colorTone": "--freq=0.4 --spread=1.8",
+      "figletFont": "standard",
+      "typeSpeed": 30,
+      "fadeSteps": 15,
+      "primaryColor": "#166534",
+      "accentColor": "#22c55e"
+    },
+    
+    "neon-purple": {
+      "name": "Neon Purple",
+      "description": "Vibrant purple cyberpunk style",
+      "colorTone": "--freq=1.2 --spread=3.0 --seed 42",
+      "figletFont": "doom",
+      "typeSpeed": 25,
+      "fadeSteps": 6,
+      "primaryColor": "#7c3aed",
+      "accentColor": "#c4b5fd"
+    },
+    
+    "minimalist": {
+      "name": "Minimalist",
+      "description": "Clean, simple black and white",
+      "colorTone": "",
+      "figletFont": "small",
+      "typeSpeed": 40,
+      "fadeSteps": 5,
+      "primaryColor": "#000000",
+      "accentColor": "#6b7280"
+    },
+    
+    "retro-green": {
+      "name": "Retro Terminal",
+      "description": "Classic green terminal style",
+      "colorTone": "--freq=0.1 --spread=1.0",
+      "figletFont": "banner",
+      "typeSpeed": 20,
+      "fadeSteps": 8,
+      "primaryColor": "#16a34a",
+      "accentColor": "#84cc16"
+    }
+  },
+  
+  "_comment_predefined": "Built-in themes (reference only - these are hardcoded)",
+  "builtinThemes": {
+    "epic": {
+      "colorTone": "--freq=0.8 --spread=2.0 --seed 17",
+      "description": "Heroic and dramatic"
+    },
+    "cyberpunk": {
+      "colorTone": "--freq=0.9 --spread=2.5 --seed 42",
+      "description": "Futuristic neon"
+    },
+    "zen": {
+      "colorTone": "--freq=0.15 --spread=3.0",
+      "description": "Calm and peaceful"
+    },
+    "mellow": {
+      "colorTone": "--freq=0.2 --spread=3.0",
+      "description": "Soft and gentle"
+    },
+    "retro": {
+      "colorTone": "--freq=0.5 --spread=2.0",
+      "description": "Nostalgic vibes"
+    },
+    "neon": {
+      "colorTone": "--freq=1.0 --spread=3.5",
+      "description": "Bright and vibrant"
+    }
+  }
+}

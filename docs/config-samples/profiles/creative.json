@@ -1,0 +1,78 @@
+{
+  "name": "Creative Profile",
+  "description": "Inspirational quotes for artists, writers, and creative minds",
+  "version": "1.0.0",
+  
+  "settings": {
+    "core": {
+      "tone": "cyberpunk",
+      "language": "en",
+      "model": "gpt-4o",
+      "category": "creativity,art,innovation,imagination",
+      "userPrompt": "Generate inspiring quotes about creativity, artistic expression, and innovative thinking"
+    },
+    
+    "generation": {
+      "quoteCount": 20,
+      "fetchInterval": 1.5,
+      "minRating": 1
+    },
+    
+    "animation": {
+      "typeSpeed": 25,
+      "fadeSteps": 8,
+      "fadeDelay": 80,
+      "displayTime": 2500,
+      "displayStyle": "standard"
+    },
+    
+    "visual": {
+      "figletFont": "doom",
+      "theme": "neon-purple"
+    },
+    
+    "notifications": {
+      "enabled": true,
+      "visual": true,
+      "disableSound": false,
+      "flashScreen": true
+    },
+    
+    "features": {
+      "interactive": true,
+      "verbose": true,
+      "autoSave": true
+    },
+    
+    "audio": {
+      "audioFile": "~/Music/inspiration.wav",
+      "enableSounds": true
+    }
+  },
+  
+  "customCategories": [
+    "creativity",
+    "art",
+    "design",
+    "innovation",
+    "imagination",
+    "expression",
+    "inspiration",
+    "breakthrough",
+    "experimentation"
+  ],
+  
+  "favoriteGenres": [
+    "science fiction",
+    "fantasy",
+    "surrealism",
+    "abstract"
+  ],
+  
+  "creativePeriods": [
+    "renaissance",
+    "modern art",
+    "digital age",
+    "future"
+  ]
+}
