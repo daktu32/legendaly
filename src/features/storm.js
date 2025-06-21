@@ -138,8 +138,8 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Main storm mode function
-async function runStormMode(quotes, options = {}) {
+// Main echoes mode function
+async function runEchoesMode(quotes, options = {}) {
   const {
     interval = 5000,
     includeHistory = true,
@@ -149,7 +149,7 @@ async function runStormMode(quotes, options = {}) {
   
   // Check TTE availability
   if (!checkTTE()) {
-    console.error('\n❌ Storm mode requires Terminal Text Effects (tte)');
+    console.error('\n❌ Echoes mode requires Terminal Text Effects (tte)');
     console.error('\n📦 Install with: pip install terminal-text-effects\n');
     process.exit(1);
   }
@@ -163,7 +163,7 @@ async function runStormMode(quotes, options = {}) {
   }
   
   if (quotePool.length === 0) {
-    console.error('No quotes available for storm mode');
+    console.error('No quotes available for echoes mode');
     return;
   }
   
@@ -220,16 +220,16 @@ async function runStormMode(quotes, options = {}) {
   cleanup();
 }
 
-// Storm mode with existing quotes in memory
-async function stormModeWithQuotes(quotes, options = {}) {
-  console.log('\n🌪️  Entering Storm Mode...\n');
+// Echoes mode with existing quotes in memory
+async function echoesModeWithQuotes(quotes, options = {}) {
+  console.log('\n🔮  Entering Echoes Mode...\n');
   await sleep(1000);
-  await runStormMode(quotes, options);
+  await runEchoesMode(quotes, options);
 }
 
-// Standalone storm mode (loads historical quotes only)
-async function standaloneStormMode(options = {}) {
-  console.log('\n🌪️  Storm Mode: Loading historical quotes...\n');
+// Standalone echoes mode (loads historical quotes only)
+async function standaloneEchoesMode(options = {}) {
+  console.log('\n🔮  Echoes Mode: Loading historical quotes...\n');
   const quotes = await loadHistoricalQuotes(200);
   
   if (quotes.length === 0) {
@@ -237,16 +237,20 @@ async function standaloneStormMode(options = {}) {
     return;
   }
   
-  console.log(`Found ${quotes.length} quotes. Starting storm...\n`);
+  console.log(`Found ${quotes.length} quotes. Starting echoes...\n`);
   await sleep(1000);
   
-  await runStormMode(quotes, { ...options, includeHistory: false });
+  await runEchoesMode(quotes, { ...options, includeHistory: false });
 }
 
 module.exports = {
-  runStormMode,
-  stormModeWithQuotes,
-  standaloneStormMode,
+  runEchoesMode,
+  echoesModeWithQuotes,
+  standaloneEchoesMode,
+  // Legacy aliases for backward compatibility
+  runStormMode: runEchoesMode,
+  stormModeWithQuotes: echoesModeWithQuotes,
+  standaloneStormMode: standaloneEchoesMode,
   checkTTE,
   TTE_EFFECTS,
   DISSOLVE_EFFECTS

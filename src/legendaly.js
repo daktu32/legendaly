@@ -124,8 +124,7 @@ Usage: legendaly [options]
 Options:
   -h, --help        Show this help message
   --interactive     Enable interactive mode
-  --storm           Storm mode: display quotes with terminal effects
-  --storm-only      Storm mode with historical quotes only
+  --echoes          Echoes mode: display historical quotes with terminal effects
   --version         Show version
 
 Environment variables:
@@ -150,54 +149,27 @@ if (args.includes('--version')) {
   process.exit(0);
 }
 
-// Storm モード処理
-if (args.includes('--storm') || args.includes('--storm-only')) {
-  const { standaloneStormMode, stormModeWithQuotes } = require('./features/storm');
+// Echoes モード処理
+if (args.includes('--echoes')) {
+  const { standaloneEchoesMode } = require('./features/storm');
   
-  async function runStorm() {
+  async function runEchoes() {
     try {
-      if (args.includes('--storm-only')) {
-        // 履歴から読み込むモード
-        await standaloneStormMode({
-          interval: displayTime || 5000,
-          continuous: true,
-          randomOrder: true
-        });
-      } else {
-        // 通常の名言生成後にstormモードへ
-        console.log('🌪️  Generating new quotes before entering Storm Mode...\n');
-        const allQuotes = await generateBatchQuotes(
-          openai, 
-          model, 
-          role, 
-          createBatchPrompt, 
-          allPatterns, 
-          language, 
-          combinedTone,
-          logPath,
-          echoesPath,
-          Math.min(quoteCount, 10),
-          verbose,
-          userPrompt,
-          category
-        );
-        
-        await stormModeWithQuotes(allQuotes, {
-          interval: displayTime || 5000,
-          includeHistory: true,
-          continuous: true,
-          randomOrder: true
-        });
-      }
+      // 履歴から読み込むモード（新規生成なし）
+      await standaloneEchoesMode({
+        interval: displayTime || 5000,
+        continuous: true,
+        randomOrder: true
+      });
     } catch (error) {
       showCursor();
-      console.error('\n❌ Storm mode error:', error.message);
+      console.error('\n❌ Echoes mode error:', error.message);
       process.exit(1);
     }
   }
   
   hideCursor();
-  runStorm();
+  runEchoes();
   return; // Exit early, don't run main loop
 }
 
