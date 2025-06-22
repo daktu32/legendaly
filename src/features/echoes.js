@@ -238,8 +238,11 @@ function applyPaddingToContent(content) {
 }
 
 // Get high-speed parameters for specific effects
+// Returns empty array if parameters are not supported to avoid errors
 function getSpeedParameters(effect) {
   const speedParams = [];
+  
+  try {
   
   switch (effect) {
     case 'fireworks':
@@ -261,34 +264,39 @@ function getSpeedParameters(effect) {
       speedParams.push('--typing-speed', '4'); // Faster typing (default: 2)
       break;
     case 'beams':
-      speedParams.push('--beam-row-delay', '1'); // Faster beam progression
-      speedParams.push('--final-gradient-steps', '6'); // Fewer gradient steps
+      speedParams.push('--beam-delay', '5'); // Faster beam progression (default: 10)
+      speedParams.push('--final-gradient-steps', '6'); // Fewer gradient steps (default: 12)
+      speedParams.push('--final-gradient-frames', '2'); // Faster gradient (default: 5)
       break;
     case 'blackhole':
-      speedParams.push('--star-count', '50'); // Fewer stars for speed
+      // blackhole doesn't have easily adjustable speed parameters
+      speedParams.push('--final-gradient-steps', '6'); // Fewer gradient steps
       break;
     case 'unstable':
-      speedParams.push('--unstable-frames', '10'); // Shorter unstable time
+      speedParams.push('--explosion-speed', '1.5'); // Faster explosion (default: 0.75)
+      speedParams.push('--reassembly-speed', '1.5'); // Faster reassembly (default: 0.75)
       break;
     case 'vhstape':
-      speedParams.push('--glitch-line-count', '3'); // Fewer glitch lines
+      // vhstape doesn't have easily adjustable speed parameters
       speedParams.push('--final-gradient-steps', '6'); // Fewer steps
       break;
     case 'synthgrid':
-      speedParams.push('--grid-row-delay', '1'); // Faster grid formation
+      // synthgrid doesn't have easily adjustable speed parameters  
       speedParams.push('--final-gradient-steps', '6'); // Fewer steps
       break;
     case 'crumble':
       speedParams.push('--final-gradient-steps', '6'); // Fewer gradient steps
       break;
     case 'rings':
-      speedParams.push('--ring-gap', '1'); // Faster ring formation
+      speedParams.push('--ring-gap', '0.1'); // Faster ring formation (default: 0.5)
+      speedParams.push('--final-gradient-steps', '6'); // Fewer gradient steps
       break;
     case 'swarm':
       speedParams.push('--final-gradient-steps', '6'); // Fewer gradient steps
       break;
     case 'spotlights':
-      speedParams.push('--spotlight-count', '3'); // Fewer spotlights for speed
+      speedParams.push('--spotlight-count', '3'); // Fewer spotlights for speed (default: 5)
+      speedParams.push('--final-gradient-steps', '6'); // Fewer gradient steps
       break;
     // Most fast effects don't need additional parameters as they're already optimized
     case 'slide':
@@ -300,6 +308,16 @@ function getSpeedParameters(effect) {
     case 'print':
       // These are already fast, no additional params needed
       break;
+    default:
+      // For unknown effects, just add common gradient optimization
+      speedParams.push('--final-gradient-steps', '6');
+      break;
+  }
+  
+  } catch (error) {
+    // If any error occurs, return empty array to use default parameters
+    console.warn(`Warning: Could not optimize parameters for effect ${effect}:`, error.message);
+    return [];
   }
   
   return speedParams;
@@ -351,10 +369,11 @@ function displayWithTTE(content, effect) {
     
     tte.on('error', (err) => {
       clearTimeout(timeout);
-      console.error(`TTE error: ${err.message}`);
-      // Fallback to simple display
+      console.error(`TTE error with effect '${effect}': ${err.message}`);
+      // Fallback to simple display without TTE
+      console.clear();
       console.log(paddedContent);
-      resolve();
+      setTimeout(resolve, 2000); // Show for 2 seconds
     });
   });
 }
