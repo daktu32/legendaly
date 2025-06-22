@@ -66,7 +66,7 @@ const TECHNICAL_EFFECTS = [
 
 const DISSOLVE_EFFECTS = ['crumble', 'scattered', 'spray', 'swarm', 'burn'];
 
-// Check if tte is available
+// Check if tte command-line tool is available
 function checkTTE() {
   try {
     execSync('which tte', { stdio: 'ignore' });
@@ -108,283 +108,35 @@ function getTerminalSize() {
   return { columns, rows };
 }
 
-// Center content with golden ratio layout and appropriate margins
-function centerContent(lines) {
+// Simple content centering for TTE command-line usage
+function centerContentSimple(content) {
   const { columns } = getTerminalSize();
+  const lines = content.split('\n');
   
-  if (lines.length === 0) return lines;
+  if (lines.length === 0) return content;
   
-  // Calculate the actual maximum content width
-  let maxContentWidth = 0;
+  // Calculate the maximum line width
+  let maxWidth = 0;
   for (const line of lines) {
     const width = calculateVisualWidth(line);
-    maxContentWidth = Math.max(maxContentWidth, width);
+    maxWidth = Math.max(maxWidth, width);
   }
   
-  // Force golden ratio layout regardless of content width
-  const goldenRatio = 1.618;
-  const idealContentWidth = Math.floor(columns / goldenRatio);
+  // Calculate padding for center alignment
+  const padding = Math.max(0, Math.floor((columns - maxWidth) / 2));
   
-  // Always apply golden ratio margins
-  const totalMargin = columns - idealContentWidth;
-  const leftMargin = Math.floor(totalMargin / 2);
-  const rightMargin = totalMargin - leftMargin;
-  
-  console.log(`🔍 Forced golden ratio: terminal=${columns}, ideal=${idealContentWidth}, content=${maxContentWidth}, margins=${leftMargin}/${rightMargin}`);
-  
-  return lines.map(line => {
+  // Apply padding to each line
+  const centeredLines = lines.map(line => {
     const lineWidth = calculateVisualWidth(line);
-    
-    // Truncate line to fit within ideal content width if necessary
-    let adjustedLine = line;
-    let adjustedLineWidth = lineWidth;
-    
-    if (lineWidth > idealContentWidth) {
-      let trimmedLine = '';
-      let currentWidth = 0;
-      for (const char of line) {
-        const charWidth = char.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/) ? 2 : 1;
-        if (currentWidth + charWidth <= idealContentWidth) {
-          trimmedLine += char;
-          currentWidth += charWidth;
-        } else {
-          break;
-        }
-      }
-      adjustedLine = trimmedLine;
-      adjustedLineWidth = calculateVisualWidth(adjustedLine);
-    }
-    
-    // Center the line within the ideal content area
-    const contentPadding = idealContentWidth - adjustedLineWidth;
-    const contentLeftPad = Math.floor(contentPadding / 2);
-    const contentRightPad = contentPadding - contentLeftPad;
-    
-    // Apply golden ratio margins
-    return ' '.repeat(leftMargin) + 
-           ' '.repeat(contentLeftPad) + 
-           adjustedLine + 
-           ' '.repeat(contentRightPad) + 
-           ' '.repeat(rightMargin);
+    const linePadding = Math.max(0, Math.floor((columns - lineWidth) / 2));
+    return ' '.repeat(linePadding) + line;
   });
+  
+  return centeredLines.join('\n');
 }
 
-// Justify a single line by distributing spaces evenly
-function justifyLine(line, targetWidth) {
-  const cleanLine = line.replace(/\x1b\[[0-9;]*m/g, '');
-  
-  // Calculate current visual width
-  let currentWidth = 0;
-  for (const char of cleanLine) {
-    if (char.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/)) {
-      currentWidth += 2;
-    } else {
-      currentWidth += 1;
-    }
-  }
-  
-  // If already at target width, return as-is
-  if (currentWidth >= targetWidth) {
-    return line;
-  }
-  
-  // Split into columns by finding column boundaries (2+ spaces)
-  const parts = line.split(/(\s{2,})/);
-  const contentParts = parts.filter((part, i) => i % 2 === 0); // Odd indices are separators
-  const separators = parts.filter((part, i) => i % 2 === 1);
-  
-  if (contentParts.length <= 1) {
-    return line; // Can't justify single column
-  }
-  
-  // Calculate extra spaces needed
-  const extraSpaces = targetWidth - currentWidth;
-  const gaps = separators.length;
-  
-  if (gaps === 0) {
-    return line;
-  }
-  
-  // Distribute extra spaces evenly across gaps
-  const baseExtraSpaces = Math.floor(extraSpaces / gaps);
-  const remainderSpaces = extraSpaces % gaps;
-  
-  // Rebuild line with justified spacing
-  let result = contentParts[0];
-  for (let i = 0; i < separators.length; i++) {
-    const extraForThisGap = baseExtraSpaces + (i < remainderSpaces ? 1 : 0);
-    result += separators[i] + ' '.repeat(extraForThisGap);
-    if (i + 1 < contentParts.length) {
-      result += contentParts[i + 1];
-    }
-  }
-  
-  return result;
-}
 
-// Format quote for display (column format)
-function formatQuoteForEchoes(quote) {
-  if (!quote || !Array.isArray(quote)) return [];
-  
-  const [text, character, work, period] = quote;
-  
-  // Format with separators for column alignment
-  const quoteText = text ? `「${text}」` : '';
-  const author = character || '';
-  const source = work || '';
-  const year = period || '';
-  
-  // Use | as separator for column formatting
-  return [`${quoteText}|${author}|${source}|${year}`];
-}
 
-// Format all quotes with column alignment that fits terminal width
-function formatQuotesWithColumns(quotes) {
-  const { columns } = getTerminalSize();
-  const formattedLines = [];
-  
-  for (const quote of quotes) {
-    const [text, character, work, period] = quote;
-    const year = period || '';
-    const quoteText = text ? `「${text}」` : '';
-    const author = character || '';
-    const source = work || '';
-    
-    formattedLines.push([year, quoteText, author, source]);
-  }
-  
-  // Calculate column widths (considering Japanese characters)
-  const maxWidths = [0, 0, 0, 0];
-  for (const line of formattedLines) {
-    for (let i = 0; i < line.length; i++) {
-      const cleanText = line[i].replace(/\x1b\[[0-9;]*m/g, ''); // Remove ANSI codes
-      // Calculate display width considering Japanese characters
-      let displayWidth = 0;
-      for (const char of cleanText) {
-        // Japanese characters are typically wider
-        if (char.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/)) {
-          displayWidth += 2;
-        } else {
-          displayWidth += 1;
-        }
-      }
-      maxWidths[i] = Math.max(maxWidths[i], displayWidth);
-    }
-  }
-  
-  // Adjust column widths to fit terminal width EXACTLY
-  const availableWidth = columns; // Use full terminal width
-  const spacingWidth = (maxWidths.length - 1) * 2; // 2 spaces between columns
-  
-  // Calculate column widths as percentages of terminal width
-  const yearPercent = 0.08;    // 8% for year (e.g., "2999年")
-  const quotePercent = 0.50;   // 50% for quote text
-  const authorPercent = 0.22;  // 22% for author
-  const sourcePercent = 0.20;  // 20% for source
-  
-  // Calculate actual widths based on terminal width
-  const yearWidth = Math.floor(availableWidth * yearPercent);
-  const quoteWidth = Math.floor(availableWidth * quotePercent);
-  const authorWidth = Math.floor(availableWidth * authorPercent);
-  const sourceWidth = availableWidth - yearWidth - quoteWidth - authorWidth - spacingWidth; // Use remaining space
-  
-  maxWidths[0] = yearWidth;
-  maxWidths[1] = quoteWidth;
-  maxWidths[2] = authorWidth;
-  maxWidths[3] = sourceWidth;
-  
-  
-  
-  
-  // Format with proper spacing, ensuring EXACT terminal width
-  const alignedLines = [];
-  for (const line of formattedLines) {
-    const paddedLine = line.map((col, i) => {
-      let text = col;
-      const cleanText = text.replace(/\x1b\[[0-9;]*m/g, '');
-      
-      // Truncate if too long (especially quote text)
-      if (i === 1 && cleanText.length > 0) { // Quote text column
-        let currentWidth = 0;
-        let truncatedText = '';
-        const maxAllowedWidth = maxWidths[i];
-        
-        // Calculate exact width first
-        let totalWidth = 0;
-        for (const char of cleanText) {
-          const charWidth = char.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/) ? 2 : 1;
-          totalWidth += charWidth;
-        }
-        
-        if (totalWidth <= maxAllowedWidth) {
-          text = cleanText; // No truncation needed
-        } else {
-          // Need to truncate - leave exactly 2 chars for ellipsis
-          for (const char of cleanText) {
-            const charWidth = char.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/) ? 2 : 1;
-            if (currentWidth + charWidth + 2 <= maxAllowedWidth) { // +2 for ellipsis
-              truncatedText += char;
-              currentWidth += charWidth;
-            } else {
-              break;
-            }
-          }
-          text = truncatedText + '…';
-        }
-      }
-      
-      // Calculate current display width
-      let currentWidth = 0;
-      for (const char of text) {
-        if (char.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/)) {
-          currentWidth += 2;
-        } else {
-          currentWidth += 1;
-        }
-      }
-      
-      // Padding calculation for exact terminal width usage
-      let padding = 0;
-      if (i < line.length - 1) {
-        // For non-last columns: pad to column width + 2 spaces
-        padding = maxWidths[i] - currentWidth + 2;
-      } else {
-        // Last column: fill exactly to terminal edge (no overflow)
-        padding = maxWidths[i] - currentWidth;
-      }
-      
-      return text + ' '.repeat(Math.max(0, padding));
-    });
-    
-    // Join columns and ensure exact terminal width
-    let fullLine = paddedLine.join('');
-    
-    // Check and fix line length to match terminal width exactly
-    const lineWidth = calculateVisualWidth(fullLine);
-    if (lineWidth > availableWidth) {
-      // Too long: trim from the end
-      let trimmedLine = '';
-      let currentLineWidth = 0;
-      for (const char of fullLine) {
-        const charWidth = char.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/) ? 2 : 1;
-        if (currentLineWidth + charWidth <= availableWidth) {
-          trimmedLine += char;
-          currentLineWidth += charWidth;
-        } else {
-          break;
-        }
-      }
-      fullLine = trimmedLine;
-    } else if (lineWidth < availableWidth) {
-      // Too short: pad to exact width
-      fullLine += ' '.repeat(availableWidth - lineWidth);
-    }
-    
-    alignedLines.push(fullLine);
-  }
-  
-  return alignedLines;
-}
 
 // Load quotes from echoes directory
 async function loadHistoricalQuotes(limit = 100) {
@@ -427,48 +179,107 @@ async function loadHistoricalQuotes(limit = 100) {
   return quotes;
 }
 
-// Display quote with TTE effect
+// Extract quotes and prepare text for display
+function extractQuotesText(quotes) {
+  const { columns } = getTerminalSize();
+  const lines = [];
+  
+  for (const quote of quotes) {
+    const [text, character, work, period] = quote;
+    const year = period || '';
+    const quoteText = text ? `「${text}」` : '';
+    const author = character || '';
+    const source = work || '';
+    
+    // Create formatted line for each quote
+    const line = [year, quoteText, author, source]
+      .filter(part => part.trim())
+      .join('  ');
+    
+    if (line.trim()) {
+      lines.push(line);
+    }
+  }
+  
+  return lines;
+}
+
+// Calculate optimal padding for content centering
+function calculateOptimalPadding(content) {
+  const { columns } = getTerminalSize();
+  const lines = content.split('\n');
+  
+  // Find the longest line
+  let maxWidth = 0;
+  for (const line of lines) {
+    const width = calculateVisualWidth(line);
+    maxWidth = Math.max(maxWidth, width);
+  }
+  
+  // Calculate padding for centering
+  const padding = Math.max(0, Math.floor((columns - maxWidth) / 2));
+  
+  return {
+    leftPadding: padding,
+    contentWidth: maxWidth,
+    totalWidth: columns
+  };
+}
+
+// Apply padding to content for optimal display
+function applyPaddingToContent(content) {
+  const { leftPadding } = calculateOptimalPadding(content);
+  const lines = content.split('\n');
+  
+  return lines
+    .map(line => ' '.repeat(leftPadding) + line)
+    .join('\n');
+}
+
+// Display quotes with TTE effect using command-line version
 function displayWithTTE(content, effect) {
   return new Promise((resolve, reject) => {
-    const { columns } = getTerminalSize();
+    const { columns, rows } = getTerminalSize();
+    
+    // Apply optimal padding to content
+    const paddedContent = applyPaddingToContent(content);
+    
     console.log(`\n🎭 Effect: ${effect}\n`);
     
+    // Use TTE command-line tool with optimized parameters
     const tte = spawn('tte', [
       '--canvas-width', String(columns),
-      '--canvas-height', '0', 
+      '--canvas-height', String(rows),
       '--wrap-text',
-      '--frame-rate', '15', // Lower frame rate for performance
+      '--frame-rate', '20', // Smooth animation
+      '--anchor-canvas', 'c', // Center canvas
+      '--anchor-text', 'c',   // Center text
       effect
-    ]);
-    
-    // Capture output to ensure process completion
-    let output = '';
-    tte.stdout.on('data', (data) => {
-      output += data;
-      process.stdout.write(data);
+    ], {
+      stdio: ['pipe', 'inherit', 'inherit']
     });
     
-    tte.stderr.on('data', (data) => {
-      process.stderr.write(data);
-    });
-    
-    // Set longer timeout for complete animations
+    // Set timeout for animation completion
     const timeout = setTimeout(() => {
-      tte.kill();
-      resolve(); // Don't reject on timeout, just continue
-    }, 30000); // 30 second timeout for full animations
+      tte.kill('SIGTERM');
+      resolve();
+    }, 30000); // 30 second timeout
     
-    tte.stdin.write(content);
+    // Write content to TTE
+    tte.stdin.write(paddedContent);
     tte.stdin.end();
     
-    tte.on('close', code => {
+    tte.on('close', (code) => {
       clearTimeout(timeout);
       resolve();
     });
     
     tte.on('error', (err) => {
       clearTimeout(timeout);
-      resolve(); // Don't reject on error, fallback to next quote
+      console.error(`TTE error: ${err.message}`);
+      // Fallback to simple display
+      console.log(paddedContent);
+      resolve();
     });
   });
 }
@@ -534,42 +345,29 @@ async function runEchoesMode(quotes, options = {}) {
   process.on('SIGINT', cleanup);
   process.on('SIGTERM', cleanup);
   
-  // Main display loop
+  // Main display loop with optimized text processing
   while (continuous) {
     console.clear();
     
-    // Shuffle quotes and take fewer quotes for testing
+    // Shuffle quotes and select optimal number for display
     const shuffledQuotes = [...quotePool].sort(() => Math.random() - 0.5);
-    // Adjust number of quotes based on terminal height
     const { rows } = getTerminalSize();
-    let maxQuotesToShow = 20; // Default
     
-    if (rows >= 80) {
-      maxQuotesToShow = Math.min(50, quotePool.length); // Up to 50 quotes for ultra-tall displays
-    } else if (rows >= 60) {
-      maxQuotesToShow = Math.min(45, quotePool.length); // Up to 45 quotes for very tall terminals
-    } else if (rows >= 50) {
-      maxQuotesToShow = Math.min(35, quotePool.length); // Up to 35 quotes for tall terminals
-    } else if (rows >= 40) {
-      maxQuotesToShow = Math.min(30, quotePool.length); // Up to 30 quotes for medium-tall terminals
-    } else if (rows >= 30) {
-      maxQuotesToShow = Math.min(25, quotePool.length); // Up to 25 quotes for medium terminals
-    }
+    // Calculate optimal quote count based on terminal height
+    let maxQuotesToShow = Math.min(Math.floor(rows * 0.6), quotePool.length);
+    if (maxQuotesToShow < 5) maxQuotesToShow = 5;
+    if (maxQuotesToShow > 40) maxQuotesToShow = 40;
     
     const selectedQuotes = shuffledQuotes.slice(0, maxQuotesToShow);
     
-    // Format all quotes with column alignment
-    const allLines = formatQuotesWithColumns(selectedQuotes);
-    
-    // Apply centering with golden ratio margins
-    const centeredLines = centerContent(allLines);
-    
-    const content = centeredLines.join('\n');
+    // Extract quotes text in simple format
+    const quotesText = extractQuotesText(selectedQuotes);
+    const content = quotesText.join('\n');
     
     // Select random effect from all available effects
     const effect = TTE_EFFECTS[Math.floor(Math.random() * TTE_EFFECTS.length)];
     
-    // Display all quotes with single effect
+    // Display all quotes with single TTE effect
     await displayWithTTE(content, effect);
     
     // Wait before next display
@@ -612,6 +410,10 @@ module.exports = {
   stormModeWithQuotes: echoesModeWithQuotes,
   standaloneStormMode: standaloneEchoesMode,
   checkTTE,
+  extractQuotesText,
+  calculateOptimalPadding,
+  applyPaddingToContent,
+  centerContentSimple,
   TTE_EFFECTS,
   FAST_EFFECTS,
   DRAMATIC_EFFECTS,
