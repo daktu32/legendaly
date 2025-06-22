@@ -77,34 +77,36 @@ function checkTTE() {
   }
 }
 
-// Get terminal dimensions using system commands with dynamic detection
+// Get terminal dimensions with improved detection
 function getTerminalSize() {
-  let columns = 120; // Default fallback for modern terminals
-  let rows = 30;     // Default fallback for modern terminals
+  let columns = 80; // Conservative default
+  let rows = 24;    // Conservative default
   
-  // Prefer process.stdout over tput for more accurate detection
-  if (process.stdout.columns && process.stdout.rows) {
+  // Try multiple detection methods
+  if (process.stdout.isTTY && process.stdout.columns && process.stdout.rows) {
     columns = process.stdout.columns;
     rows = process.stdout.rows;
-    // console.log(`🔍 Terminal detection (process.stdout): columns=${columns}, rows=${rows}`);
   } else {
     try {
-      // Fallback to tput if process.stdout is not available
+      // Fallback to tput
       const tputCols = execSync('tput cols', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-      columns = parseInt(tputCols.trim()) || 120;
-      
       const tputRows = execSync('tput lines', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-      rows = parseInt(tputRows.trim()) || 30;
       
-      // console.log(`🔍 Terminal detection (tput): columns=${columns}, rows=${rows}`);
+      const detectedCols = parseInt(tputCols.trim());
+      const detectedRows = parseInt(tputRows.trim());
+      
+      if (detectedCols && detectedRows) {
+        columns = detectedCols;
+        rows = detectedRows;
+      }
     } catch (error) {
-      // console.log(`🔍 Terminal detection (default): columns=${columns}, rows=${rows}`);
+      // Use defaults
     }
   }
   
-  // Ensure minimum bounds for usability, support unlimited large displays
-  columns = Math.max(60, columns); // Min 60 chars, no upper limit for ultra-wide monitors
-  rows = Math.max(20, rows);        // Min 20 lines, no upper limit for tall displays
+  // Reasonable bounds
+  columns = Math.max(40, Math.min(200, columns));
+  rows = Math.max(15, Math.min(50, rows));
   
   return { columns, rows };
 }
@@ -135,9 +137,6 @@ function centerContentSimple(content) {
   
   return centeredLines.join('\n');
 }
-
-
-
 
 // Load quotes from echoes directory
 async function loadHistoricalQuotes(limit = 100) {
@@ -180,22 +179,153 @@ async function loadHistoricalQuotes(limit = 100) {
   return quotes;
 }
 
-// Extract quotes and prepare text for display
+// Determine optimal layout mode based on terminal dimensions
+function getLayoutMode(columns) {
+  if (columns < 70) return 'minimal';      // Very narrow: quote + author only
+  if (columns < 100) return 'compact';    // Narrow: optimized 4-column
+  if (columns > 140) return 'spacious';   // Wide: fixed max width + centering
+  return 'standard';                      // Standard: balanced 4-column
+}
+
+// Calculate minimum required widths for Japanese content
+function getMinimumWidths() {
+  return {
+    year: 8,    // "1990年代"
+    author: 6,  // "夏目漱石" 
+    source: 8,  // "坊っちゃん"
+    quote: 30   // Minimum readable quote
+  };
+}
+
+// Extract quotes and prepare text for display with adaptive layout
 function extractQuotesText(quotes) {
   const { columns } = getTerminalSize();
+  const lines = [];
+  const layoutMode = getLayoutMode(columns);
+  const minWidths = getMinimumWidths();
+  
+  console.log(`🎨 Layout mode: ${layoutMode} (${columns} columns)`);
+  
+  // Handle different layout modes
+  switch (layoutMode) {
+    case 'minimal':
+      return extractMinimalLayout(quotes, columns);
+    case 'compact':
+      return extractCompactLayout(quotes, columns, minWidths);
+    case 'spacious':
+      return extractSpaciousLayout(quotes, columns, minWidths);
+    default:
+      return extractStandardLayout(quotes, columns, minWidths);
+  }
+}
+
+// Minimal layout: Quote + Author only
+function extractMinimalLayout(quotes, columns) {
+  const lines = [];
+  const separatorSpace = 1;
+  const availableWidth = columns - separatorSpace;
+  
+  // 70% for quote, 30% for author
+  const quoteWidth = Math.floor(availableWidth * 0.7);
+  const authorWidth = availableWidth - quoteWidth;
+  
+  for (const quote of quotes) {
+    const [text, character] = quote;
+    const quoteText = text ? `「${text}」` : '';
+    const author = character || '';
+    
+    const formattedQuote = truncateToVisualWidth(quoteText, quoteWidth);
+    const formattedAuthor = truncateToVisualWidth(author, authorWidth);
+    
+    const paddedQuote = padToVisualWidth(formattedQuote, quoteWidth);
+    const line = `${paddedQuote} ${formattedAuthor}`;
+    
+    if (line.trim()) lines.push(line);
+  }
+  
+  return { lines, width: quoteWidth + authorWidth + separatorSpace };
+}
+
+// Compact layout: Optimized 4-column with minimum widths
+function extractCompactLayout(quotes, columns, minWidths) {
+  const separatorSpace = 3;
+  const availableWidth = columns - separatorSpace;
+  
+  // Ensure minimum widths are met
+  const totalMinWidth = minWidths.year + minWidths.author + minWidths.source + minWidths.quote;
+  
+  if (availableWidth < totalMinWidth) {
+    // Fall back to minimal layout if too narrow
+    return extractMinimalLayout(quotes, columns);
+  }
+  
+  // Distribute extra space proportionally
+  const extraSpace = availableWidth - totalMinWidth;
+  const quoteWidth = minWidths.quote + Math.floor(extraSpace * 0.6);
+  const yearWidth = minWidths.year + Math.floor(extraSpace * 0.1);
+  const authorWidth = minWidths.author + Math.floor(extraSpace * 0.15);
+  const sourceWidth = minWidths.source + Math.floor(extraSpace * 0.15);
+  
+  const lines = formatQuotesWithWidths(quotes, yearWidth, quoteWidth, authorWidth, sourceWidth);
+  return { lines, width: availableWidth };
+}
+
+// Standard layout: Balanced 4-column with golden ratio influence
+function extractStandardLayout(quotes, columns, minWidths) {
+  const separatorSpace = 3;
+  const availableWidth = columns - separatorSpace;
+  
+  // Golden ratio influence but with minimum constraints
+  const goldenRatio = 1.618;
+  let quoteWidth = Math.floor(availableWidth / (1 + 1/goldenRatio));
+  const metaWidth = availableWidth - quoteWidth;
+  
+  // Ensure quote width is reasonable
+  quoteWidth = Math.max(minWidths.quote, Math.min(quoteWidth, 80));
+  const actualMetaWidth = availableWidth - quoteWidth;
+  
+  const yearWidth = Math.max(minWidths.year, Math.floor(actualMetaWidth * 0.25));
+  const authorWidth = Math.max(minWidths.author, Math.floor(actualMetaWidth * 0.35));
+  const sourceWidth = actualMetaWidth - yearWidth - authorWidth;
+  
+  const lines = formatQuotesWithWidths(quotes, yearWidth, quoteWidth, authorWidth, sourceWidth);
+  const totalWidth = yearWidth + quoteWidth + authorWidth + sourceWidth + separatorSpace;
+  
+  return { lines, width: totalWidth };
+}
+
+// Spacious layout: Fixed maximum width with centering
+function extractSpaciousLayout(quotes, columns, minWidths) {
+  // Use a maximum effective width and center the result
+  const maxEffectiveWidth = 120;
+  const { lines, width } = extractStandardLayout(quotes, maxEffectiveWidth + 3, minWidths);
+  
+  // Centering is handled by TTE (--anchor-canvas c), so no padding is needed here.
+  return { lines, width };
+}
+
+// Helper function to format quotes with given widths
+function formatQuotesWithWidths(quotes, yearWidth, quoteWidth, authorWidth, sourceWidth) {
   const lines = [];
   
   for (const quote of quotes) {
     const [text, character, work, period] = quote;
-    const year = period || '';
-    const quoteText = text ? `「${text}」` : '';
-    const author = character || '';
-    const source = work || '';
     
-    // Create formatted line for each quote
-    const line = [year, quoteText, author, source]
-      .filter(part => part.trim())
-      .join('  ');
+    // Format each field with Japanese-aware width handling
+    const year = truncateToVisualWidth(period || '', yearWidth);
+    const quoteText = text ? `「${text}」` : '';
+    const formattedQuote = truncateToVisualWidth(quoteText, quoteWidth);
+    const author = truncateToVisualWidth(character || '', authorWidth);
+    const source = truncateToVisualWidth(work || '', sourceWidth);
+    
+    // Apply visual width padding
+    const paddedYear = padToVisualWidth(year, yearWidth);
+    const paddedQuote = padToVisualWidth(formattedQuote, quoteWidth);
+    const paddedAuthor = padToVisualWidth(author, authorWidth);
+    const finalSource = padToVisualWidth(source, sourceWidth); // Pad last column for consistent width
+    
+    // Combine with single space separators
+    const line = `${paddedYear} ${paddedQuote} ${paddedAuthor} ${finalSource}`;
     
     if (line.trim()) {
       lines.push(line);
@@ -324,32 +454,28 @@ function getSpeedParameters(effect) {
 }
 
 // Display quotes with TTE effect using command-line version
-function displayWithTTE(content, effect) {
+function displayWithTTE(content, effect, width) {
   return new Promise((resolve, reject) => {
     const { columns, rows } = getTerminalSize();
     
-    // Apply optimal padding to content
-    const paddedContent = applyPaddingToContent(content);
+    // Use content as-is without additional padding (TTE will handle centering)
+    const paddedContent = content;
     
     console.log(`\n🎭 Effect: ${effect}\n`);
     
-    // Get speed parameters for this effect
-    const speedParams = getSpeedParameters(effect);
-    
-    // Use TTE command-line tool with high-speed parameters
+    // Use TTE command-line tool with minimal centering
     const baseParams = [
-      '--canvas-width', String(columns),
-      '--canvas-height', String(rows),
-      '--wrap-text',
       '--frame-rate', '0', // No frame rate limit for maximum speed
-      '--anchor-canvas', 'c', // Center canvas
-      '--anchor-text', 'c',   // Center text
+      '--canvas-width', width ? String(width) : '-1',  // Match input text width
+      '--canvas-height', '-1', // Match input text height
+      '--anchor-canvas', 'c',  // Center canvas in terminal
+      effect
     ];
     
-    const allParams = [...baseParams, ...speedParams, effect];
+    const allParams = baseParams;
     
     const tte = spawn('tte', allParams, {
-      stdio: ['pipe', 'inherit', 'inherit']
+      stdio: ['pipe', 'inherit', 'ignore'] // Ignore stderr to suppress usage messages
     });
     
     // Set shorter timeout for faster transitions
@@ -392,89 +518,83 @@ function calculateVisualWidth(text) {
   return width;
 }
 
+// Japanese-aware padding function
+function padToVisualWidth(text, targetWidth, align = 'left') {
+  const currentWidth = calculateVisualWidth(text);
+  const padding = Math.max(0, targetWidth - currentWidth);
+  
+  if (align === 'right') {
+    return ' '.repeat(padding) + text;
+  } else if (align === 'center') {
+    const leftPad = Math.floor(padding / 2);
+    const rightPad = padding - leftPad;
+    return ' '.repeat(leftPad) + text + ' '.repeat(rightPad);
+  } else {
+    return text + ' '.repeat(padding);
+  }
+}
+
+// Truncate text to visual width
+function truncateToVisualWidth(text, maxWidth) {
+  let width = 0;
+  let result = '';
+  
+  for (const char of text) {
+    const charWidth = char.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/) ? 2 : 1;
+    if (width + charWidth > maxWidth) {
+      break;
+    }
+    result += char;
+    width += charWidth;
+  }
+  
+  return result;
+}
+
 // Sleep utility
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // Main echoes mode function
-async function runEchoesMode(quotes, options = {}) {
-  const {
-    interval = 5000,
-    includeHistory = true,
-    continuous = true,
-    maxQuotes = 50,
-    preferFastEffects = false
-  } = options;
+async function runEchoesMode(quotes, options = {}, ui = {}) {
+  const { hideCursor, showCursor } = ui;
+  const { continuous = false, interval = 5000, randomOrder = false, preferFastEffects = false } = options;
+  let historicalQuotes = quotes;
   
-  // Check TTE availability
-  if (!checkTTE()) {
-    console.error('\n❌ Echoes mode requires Terminal Text Effects (tte)');
-    console.error('\n📦 Install with: pipx install terminaltexteffects\n');
-    process.exit(1);
-  }
-  
-  // Prepare quotes pool
-  let quotePool = [...quotes];
-  
-  if (includeHistory) {
-    const historicalQuotes = await loadHistoricalQuotes();
-    quotePool = [...quotePool, ...historicalQuotes];
-  }
-  
-  if (quotePool.length === 0) {
-    console.error('No quotes available for echoes mode');
-    return;
-  }
-  
-  // Hide cursor
-  process.stdout.write('\x1b[?25l');
-  
-  // Restore cursor on exit
+  if (hideCursor) hideCursor();
   const cleanup = () => {
-    process.stdout.write('\x1b[?25h'); // Show cursor
+    if (showCursor) showCursor();
     console.clear();
     process.exit(0);
   };
-  
+
   process.on('SIGINT', cleanup);
   process.on('SIGTERM', cleanup);
   
-  // Main display loop with optimized text processing
+  process.stdout.on('resize', () => {
+    console.log(`🔄 Terminal resized to: ${process.stdout.columns}x${process.stdout.rows}`);
+  });
+  
   while (continuous) {
     console.clear();
     
-    // Shuffle quotes and select optimal number for display
-    const shuffledQuotes = [...quotePool].sort(() => Math.random() - 0.5);
     const { rows } = getTerminalSize();
+    const maxQuotes = Math.max(5, Math.min(quotes.length, rows - 2));
+
+    const shuffledQuotes = [...quotes].sort(() => Math.random() - 0.5);
+    const selectedQuotes = shuffledQuotes.slice(0, maxQuotes);
     
-    // Calculate optimal quote count based on terminal height
-    let maxQuotesToShow = Math.min(Math.floor(rows * 0.6), quotePool.length);
-    if (maxQuotesToShow < 5) maxQuotesToShow = 5;
-    if (maxQuotesToShow > 40) maxQuotesToShow = 40;
-    
-    const selectedQuotes = shuffledQuotes.slice(0, maxQuotesToShow);
-    
-    // Extract quotes text in simple format
-    const quotesText = extractQuotesText(selectedQuotes);
+    const { lines: quotesText, width: contentWidth } = extractQuotesText(selectedQuotes);
     const content = quotesText.join('\n');
     
-    // Select effect (prioritize fast effects if requested)
-    let effectPool = TTE_EFFECTS;
-    if (preferFastEffects) {
-      // 70% chance to use fast effects, 30% chance for dramatic effects
-      effectPool = Math.random() < 0.7 ? FAST_EFFECTS : TTE_EFFECTS;
-    }
-    const effect = effectPool[Math.floor(Math.random() * effectPool.length)];
+    const effect = TTE_EFFECTS[Math.floor(Math.random() * TTE_EFFECTS.length)];
     
-    // Display all quotes with single TTE effect
-    await displayWithTTE(content, effect);
+    await displayWithTTE(content, effect, contentWidth);
     
-    // Wait before next display
     await sleep(interval);
   }
   
-  // Cleanup
   cleanup();
 }
 
@@ -486,7 +606,7 @@ async function echoesModeWithQuotes(quotes, options = {}) {
 }
 
 // Standalone echoes mode (loads historical quotes only)
-async function standaloneEchoesMode(options = {}) {
+async function standaloneEchoesMode(options = {}, ui = {}) {
   console.log('\n🔮  Echoes Mode: Loading historical quotes...\n');
   const quotes = await loadHistoricalQuotes(200);
   
@@ -498,7 +618,7 @@ async function standaloneEchoesMode(options = {}) {
   console.log(`Found ${quotes.length} quotes. Starting echoes...\n`);
   await sleep(1000);
   
-  await runEchoesMode(quotes, { ...options, includeHistory: false });
+  await runEchoesMode(quotes, { ...options, includeHistory: false }, ui);
 }
 
 module.exports = {

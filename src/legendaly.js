@@ -161,7 +161,7 @@ if (args.includes('--echoes')) {
         continuous: true,
         randomOrder: true,
         preferFastEffects: true // Prioritize faster effects
-      });
+      }, { hideCursor, showCursor });
     } catch (error) {
       showCursor();
       console.error('\n❌ Echoes mode error:', error.message);
