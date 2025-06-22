@@ -151,13 +151,13 @@ if (args.includes('--version')) {
 
 // Echoes モード処理
 if (args.includes('--echoes')) {
-  const { standaloneEchoesMode } = require('./features/storm');
+  const { standaloneEchoesMode } = require('./features/echoes');
   
   async function runEchoes() {
     try {
       // 履歴から読み込むモード（新規生成なし）
       await standaloneEchoesMode({
-        interval: displayTime || 5000,
+        interval: 3000, // 3 seconds between quotes
         continuous: true,
         randomOrder: true
       });
