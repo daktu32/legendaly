@@ -237,6 +237,74 @@ function applyPaddingToContent(content) {
     .join('\n');
 }
 
+// Get high-speed parameters for specific effects
+function getSpeedParameters(effect) {
+  const speedParams = [];
+  
+  switch (effect) {
+    case 'fireworks':
+      speedParams.push('--launch-delay', '15'); // Faster launches (default: 60)
+      speedParams.push('--final-gradient-steps', '6'); // Fewer steps (default: 12)
+      break;
+    case 'matrix':
+      speedParams.push('--rain-time', '5'); // Shorter rain time (default: 15)
+      speedParams.push('--resolve-delay', '2'); // Faster resolve (default: 5)
+      speedParams.push('--rain-fall-delay-range', '1-8'); // Faster fall (default: 3-25)
+      speedParams.push('--final-gradient-frames', '2'); // Fewer frames (default: 5)
+      break;
+    case 'waves':
+      speedParams.push('--wave-length', '1'); // Faster waves (default: 2)
+      speedParams.push('--wave-count', '5'); // Fewer waves (default: 7)
+      speedParams.push('--final-gradient-steps', '6'); // Fewer steps (default: 12)
+      break;
+    case 'decrypt':
+      speedParams.push('--typing-speed', '4'); // Faster typing (default: 2)
+      break;
+    case 'beams':
+      speedParams.push('--beam-row-delay', '1'); // Faster beam progression
+      speedParams.push('--final-gradient-steps', '6'); // Fewer gradient steps
+      break;
+    case 'blackhole':
+      speedParams.push('--star-count', '50'); // Fewer stars for speed
+      break;
+    case 'unstable':
+      speedParams.push('--unstable-frames', '10'); // Shorter unstable time
+      break;
+    case 'vhstape':
+      speedParams.push('--glitch-line-count', '3'); // Fewer glitch lines
+      speedParams.push('--final-gradient-steps', '6'); // Fewer steps
+      break;
+    case 'synthgrid':
+      speedParams.push('--grid-row-delay', '1'); // Faster grid formation
+      speedParams.push('--final-gradient-steps', '6'); // Fewer steps
+      break;
+    case 'crumble':
+      speedParams.push('--final-gradient-steps', '6'); // Fewer gradient steps
+      break;
+    case 'rings':
+      speedParams.push('--ring-gap', '1'); // Faster ring formation
+      break;
+    case 'swarm':
+      speedParams.push('--final-gradient-steps', '6'); // Fewer gradient steps
+      break;
+    case 'spotlights':
+      speedParams.push('--spotlight-count', '3'); // Fewer spotlights for speed
+      break;
+    // Most fast effects don't need additional parameters as they're already optimized
+    case 'slide':
+    case 'wipe':
+    case 'pour':
+    case 'sweep':
+    case 'slice':
+    case 'expand':
+    case 'print':
+      // These are already fast, no additional params needed
+      break;
+  }
+  
+  return speedParams;
+}
+
 // Display quotes with TTE effect using command-line version
 function displayWithTTE(content, effect) {
   return new Promise((resolve, reject) => {
@@ -247,16 +315,22 @@ function displayWithTTE(content, effect) {
     
     console.log(`\n🎭 Effect: ${effect}\n`);
     
+    // Get speed parameters for this effect
+    const speedParams = getSpeedParameters(effect);
+    
     // Use TTE command-line tool with high-speed parameters
-    const tte = spawn('tte', [
+    const baseParams = [
       '--canvas-width', String(columns),
       '--canvas-height', String(rows),
       '--wrap-text',
       '--frame-rate', '0', // No frame rate limit for maximum speed
       '--anchor-canvas', 'c', // Center canvas
       '--anchor-text', 'c',   // Center text
-      effect
-    ], {
+    ];
+    
+    const allParams = [...baseParams, ...speedParams, effect];
+    
+    const tte = spawn('tte', allParams, {
       stdio: ['pipe', 'inherit', 'inherit']
     });
     
