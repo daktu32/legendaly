@@ -157,9 +157,10 @@ if (args.includes('--echoes')) {
     try {
       // 履歴から読み込むモード（新規生成なし）
       await standaloneEchoesMode({
-        interval: 3000, // 3 seconds between quotes
+        interval: 2000, // 2 seconds between quotes for faster display
         continuous: true,
-        randomOrder: true
+        randomOrder: true,
+        preferFastEffects: true // Prioritize faster effects
       });
     } catch (error) {
       showCursor();

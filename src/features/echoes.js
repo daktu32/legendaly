@@ -44,6 +44,7 @@ const TTE_EFFECTS = [
 ];
 
 // Categorized effects for different moods and performance
+// Fast effects for high-speed animations (recommended for quick transitions)
 const FAST_EFFECTS = [
   'slide', 'wipe', 'pour', 'sweep', 'slice', 'expand', 'print'
 ];
@@ -246,12 +247,12 @@ function displayWithTTE(content, effect) {
     
     console.log(`\n🎭 Effect: ${effect}\n`);
     
-    // Use TTE command-line tool with optimized parameters
+    // Use TTE command-line tool with high-speed parameters
     const tte = spawn('tte', [
       '--canvas-width', String(columns),
       '--canvas-height', String(rows),
       '--wrap-text',
-      '--frame-rate', '20', // Smooth animation
+      '--frame-rate', '0', // No frame rate limit for maximum speed
       '--anchor-canvas', 'c', // Center canvas
       '--anchor-text', 'c',   // Center text
       effect
@@ -259,11 +260,11 @@ function displayWithTTE(content, effect) {
       stdio: ['pipe', 'inherit', 'inherit']
     });
     
-    // Set timeout for animation completion
+    // Set shorter timeout for faster transitions
     const timeout = setTimeout(() => {
       tte.kill('SIGTERM');
       resolve();
-    }, 30000); // 30 second timeout
+    }, 10000); // 10 second timeout for faster cycles
     
     // Write content to TTE
     tte.stdin.write(paddedContent);
@@ -309,7 +310,8 @@ async function runEchoesMode(quotes, options = {}) {
     interval = 5000,
     includeHistory = true,
     continuous = true,
-    maxQuotes = 50
+    maxQuotes = 50,
+    preferFastEffects = false
   } = options;
   
   // Check TTE availability
@@ -364,8 +366,13 @@ async function runEchoesMode(quotes, options = {}) {
     const quotesText = extractQuotesText(selectedQuotes);
     const content = quotesText.join('\n');
     
-    // Select random effect from all available effects
-    const effect = TTE_EFFECTS[Math.floor(Math.random() * TTE_EFFECTS.length)];
+    // Select effect (prioritize fast effects if requested)
+    let effectPool = TTE_EFFECTS;
+    if (preferFastEffects) {
+      // 70% chance to use fast effects, 30% chance for dramatic effects
+      effectPool = Math.random() < 0.7 ? FAST_EFFECTS : TTE_EFFECTS;
+    }
+    const effect = effectPool[Math.floor(Math.random() * effectPool.length)];
     
     // Display all quotes with single TTE effect
     await displayWithTTE(content, effect);
