@@ -48,6 +48,6 @@
   ],
   "preferGlobal": true,
   "optionalDependencies": {
-    "comment": "tte (terminal-text-effects) is required for storm mode: pip install terminal-text-effects"
+    "comment": "tte (terminal-text-effects) is required for echoes mode: pipx install terminaltexteffects"
   }
 }

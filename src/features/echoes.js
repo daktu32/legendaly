@@ -315,7 +315,7 @@ async function runEchoesMode(quotes, options = {}) {
   // Check TTE availability
   if (!checkTTE()) {
     console.error('\n❌ Echoes mode requires Terminal Text Effects (tte)');
-    console.error('\n📦 Install with: pip install terminal-text-effects\n');
+    console.error('\n📦 Install with: pipx install terminaltexteffects\n');
     process.exit(1);
   }
   
